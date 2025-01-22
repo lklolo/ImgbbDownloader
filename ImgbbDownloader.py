@@ -4,10 +4,13 @@ import requests
 from bs4 import BeautifulSoup
 import time
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
 
+DOWNLOAD_DIR = 'downloads'
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 # 伪装请求头
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (HTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
     'Accept': 'application/octet-stream',
     'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'en-US,en;q=0.9',
@@ -36,7 +39,6 @@ def get_download_link(url, retries=10, timeout=10):
             else:
                 return f"网页请求失败，状态码: {response.status_code}"
 
-        # 重试
         except requests.RequestException as e:
             attempt += 1
             print(f"请求失败，重试 {attempt}/{retries} 次... 错误: {e}")
@@ -44,59 +46,40 @@ def get_download_link(url, retries=10, timeout=10):
 
     return "请求失败，请稍后重试。"
 
-lose = []
-def download_file(download_url, file_name, retries=10, timeout=60, chunk_size=1024*1024):
+def download_file(download_url, file_name, chunk_size=1024 * 1024, retries=5, timeout=30):
+    file_path = os.path.join(DOWNLOAD_DIR, file_name)
+    # 检查文件是否已存在
+    if os.path.exists(file_path):
+        return None
+    
     attempt = 0
-    # 确保目标文件夹存在
-    if not os.path.exists('downloads'):
-        os.makedirs('downloads')
-    # 检查文件是否已经存在
-    file_path = f'downloads/{file_name}'
-    if os.path.exists(file_path):
-        print(f"文件已存在，跳过下载: {file_name}")
-        return    
-
-    # 获取文件已下载的大小（如果文件存在的话）
-    file_path = f'downloads/{file_name}'
-    existing_size = 0
-    if os.path.exists(file_path):
-        existing_size = os.path.getsize(file_path)
-        print(f"已下载 {existing_size} 字节，继续下载...")
-
     while attempt < retries:
         try:
-            # 设置请求头中的 Range 字段，表示从上次下载中断的地方继续下载
-            range_header = {'Range': f"bytes={existing_size}-"} if existing_size > 0 else {}
-            headers.update(range_header)
-
-            # 发送GET请求，加入请求头并设置超时
-            response = requests.get(download_url, headers=headers, stream=True, timeout=timeout)
-
-            # 检查请求是否成功
-            if response.status_code == 200 or response.status_code == 206:  # 206 为断点续传
-                # 获取文件的总大小
-                total_size = int(response.headers.get('content-length', 0)) + existing_size
-                # 以追加模式打开文件，支持断点续传
-                with open(file_path, 'ab') as f:
-                    # 使用tqdm创建进度条
-                    with tqdm(total=total_size, initial=existing_size, unit='B', unit_scale=True, desc=file_name) as pbar:
-                        for chunk in response.iter_content(chunk_size=chunk_size):
-                            if chunk:
-                                f.write(chunk)
-                                pbar.update(len(chunk))  # 更新进度条
-                return  # 下载成功后跳出重试循环
-            else:
-                print(f"下载失败，状态码: {response.status_code}，重试 {attempt + 1}/{retries}")
-
+            with requests.get(download_url, headers=headers, stream=True, timeout=timeout) as response:
+                response.raise_for_status()  # 检查请求是否成功
+                total_size = int(response.headers.get('content-length', 0))
+                with open(file_path, 'wb') as f, tqdm(
+                        total=total_size, unit='B', unit_scale=True, desc=file_name
+                ) as pbar:
+                    for chunk in response.iter_content(chunk_size=chunk_size):
+                        if chunk:  # 避免空块
+                            f.write(chunk)
+                            pbar.update(len(chunk))
+            return None  # 成功下载返回 None
         except requests.RequestException as e:
-            print(f"请求失败，错误: {e}，重试 {attempt + 1}/{retries}")
+            attempt += 1
+    return download_url
 
-        # 重试
-        attempt += 1
-        time.sleep(2)
-
-    print(f"下载失败，已重试 {retries} 次。放弃: {download_url}")
-    lose.append(download_url)
+# 多线程下载
+def download_files_concurrently(download_urls, max_workers=10, retries=5):
+    failed_urls = []
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(download_file, url, url.split('/')[-1], retries=retries): url for url in download_urls}
+        for future in tqdm(futures, desc="总进度"):
+            result = future.result()
+            if result:
+                failed_urls.append(result)
+    return failed_urls
 
 if __name__ == "__main__":
     import sys
@@ -133,14 +116,12 @@ if __name__ == "__main__":
                 url.write(f"{item}\n")
         print("本次提取的原图链接已保存，开始下载原图...")
 
-    
-    # 下载文件
-    for i, download_url in enumerate(download_urls, 1):
-        file_name = download_url.split('/')[-1]
-        download_file(download_url, file_name)
-    print("下载结束")
-    if len(lose) != 0:
-        print("下载失败" + str(len(lose)) + "个文件，您可重新运行本程序并选择直接读取上次运行提取的下载链接，程序将自动检索并尝试补全")
-    else:
-        print("全部下载成功！")
+    while True:
+        failed = download_files_concurrently(download_urls)
+        if failed:
+            print(f"共 {len(failed)} 个文件下载失败，正在重试失败的下载...")
+        else:
+            print("所有文件下载成功！")
+            break
+        
         
