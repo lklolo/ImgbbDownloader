@@ -1,4 +1,4 @@
-# Imgbb Downloader 自动批量下载Imgbb相册原图 #
+# Imgbb Downloader Imgbb下载器 自动批量下载Imgbb相册原图 #
 ## 操作方法 ##
 1.在Imgbb中，打开相册后点击嵌入代码，在下拉框中选择查看链接，复制所有链接。
 ![](微信截图_20250122222942.png)

@@ -28,7 +28,7 @@ def get_download_link(url, retries=10, timeout=10):
                 # 使用BeautifulSoup解析网页
                 soup = BeautifulSoup(response.text, 'html.parser')
 
-                # 找到目标的<a>标签
+                # 找到目标的<a>标签    
                 download_link = soup.find('a', {'class': 'btn btn-download default'})
 
                 # 提取href属性中的下载链接
@@ -106,8 +106,8 @@ if __name__ == "__main__":
             print("没有检测到任何链接。")
 
         # 提取下载链接
-        for i, link in enumerate(urls, 1):
-            download_url = get_download_link(link)
+        for i, url in enumerate(urls, 1):
+            download_url = get_download_link(url)
             download_urls.append(download_url)
             print(f"已提取原图 {i}/{str(len(urls))}: {download_url}")
 
