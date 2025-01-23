@@ -86,7 +86,7 @@ if __name__ == "__main__":
     import re
 
     download_urls = []
-    if input("是否直接读取上次运行提取的下载链接(y/n, default:no) ") in ["y", "Y", "yes", "Yes"]:
+    if input("是否继续上次的下载(y/n, default:no) ") in ["y", "Y", "yes", "Yes"]:
         try:
             with open('download_urls.txt', 'r') as url:
                 download_urls = [line.strip() for line in url]
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         with open('download_urls.txt', 'w') as url:
             for item in download_urls:
                 url.write(f"{item}\n")
-        print("本次提取的原图链接已保存，开始下载原图...")
+        print("下载链接已保存，开始下载原图...")
 
     while True:
         failed = download_files_concurrently(download_urls)
