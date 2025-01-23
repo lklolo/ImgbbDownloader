@@ -108,7 +108,6 @@ def download_files_concurrently(download_urls, max_workers=10, retries=5):
 if __name__ == "__main__":
     import sys
     import re
-    from io import StringIO
 
     download_urls = []
     if input("是否继续上次的下载？(y/n, default:no) ") in ["y", "Y", "yes", "Yes"]:

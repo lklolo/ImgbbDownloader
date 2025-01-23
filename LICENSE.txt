@@ -1,0 +1,114 @@
+（本许可为中文版，并一版两语言，分别为中文和英文。英文由机器自动翻译，未经人工检验，不保证准确，可能产生歧义，只供参考使用。只有中文内容视为本许可的有效内容）
+(This license is in Chinese, and one version is in two languages, Chinese and English. English is automatically translated by the machine, without human inspection, and is not guaranteed to be accurateIt can cause ambiguity and is for reference only. Only Chinese content is considered valid content of this license)
+
+Luckshark专用公开许可协议(LDPL)v1
+
+版权所有 (c) 2024 Luckshark Inc. 保留所有权利。
+
+0.关键名词和称呼定义
+    i.“本许可”是指 Luckshark 专用公开许可协议(LDPL)v1。
+    ii.“本软件”是指根据本许可的任何受版权保护的软件和相关文档文件（“软件”）及副本或重要部分。
+    iii.“被许可方”或“接收者”是指持有本软件的人或组织。
+    iv.每个被许可方都可被称为“您”。
+    v.“使用”和“操作”是指对本软件的运行、安装和部署、修改、复制、分发。
+    vi.“源代码”是指本软件的所有代码，包括但不限于第三方库和外部模块和主要原创部分代码以及外部借鉴、摘抄的非原创代码。
+    vii.“地方”是指可以运行和操作本软件的平台或硬件。
+    iix.“保留本许可”是指保留本许可的完全原始内容。对本许可的内容有任何更改，所产生的本许可的派生许可均不视为本许可。
+    ix.“本软件的原始版本”是指由 Luckshark 发布的，未经任何被许可方修改的本软件。
+    x.“修改后的本软件”包括但不限于：通过添加/删除/修改本软件的源代码所产生的依旧遵循本许可的软件、部分代码与本软件的源代码中的原创内容高度相似的第三方软件、通过摘抄/搬运（可适度修改）本软件的源代码中的原创内容，添加到第三方软件中所产生的派生软件。
+    xi.“本软件的派生软件”包括修改后的本软件和主要功能并非本软件实现的功能，但含有本软件的高度原创的部分功能或全部功能（无视代码内容只考虑实现功能）的软件。
+    xii.“现状(as is)”表示按照当前状态和条件。
+    xiii.“Luckshark”、“Luckshark Inc.”是指组织 Luckshark，并不一定指 Luckshark公司，它可以是区别于当代法律中的任何一种社会组织的组织。
+
+本许可与其他常见的版权与开放许可协议内容由较大区别，尤其是在本软件的修改和二次分发部分。请在使用和操作本软件时额外注意。本许可中使用的大量名称和称呼均在上述内容“条目（0）：关键名词和称呼定义”中解释，可能区别于常用意义，但没有在文中额外标注，请额外注意。凡是被许可方使用和操作过本软件，均视为以熟知并同意本许可的内容。
+
+特此授予任何免费获得本软件的被许可方，遵守当地法律的情况下享有在本许可下的权利。并在使用和操作本软件时，须遵守本许可：
+
+1. 被许可方拥有本软件的使用权，您可以在任何地方使用和操作本软件。但须遵守以下条款：
+    i.任何对本软件的使用须保留本许可。
+    ii.禁止商用本软件，包括但不限于：二次售卖、安装/使用/插入在任何提供商业服务的计算机程序中。
+    iii.禁止使用本软件进行任何非法行为，包括但不限于诈骗、网络攻击或侵犯他人隐私。
+
+2. 被许可方拥有本软件的修改权和复制权，您可以自由复制和修改本软件的任何内容。但须遵守以下条款：
+    i.任何对本软件的操作须保留本许可。
+    ii.被修改的本软件只允许在被许可方内部使用，禁止二次分发和传播。详细请阅读条目（4）。
+    iii. 修改后的本软件不得以商业形式发布或用于商业目的。
+    iv. 被许可方必须确保所有对本软件的修改不违反相关法律，并且对由此产生的后果负责。
+
+3.被许可方拥有 本软件的原始版本（此条目中简称“原始软件”）的分发权，但须遵守以下条款：
+    i.保留本许可。
+    ii.免费发分原始软件。
+    iii.标注原始作者和版权信息。保证所有的再分发行为仍然遵守本许可证的条款。
+
+4.禁止在未经允许的情况下二次分发修改后的本软件和本软件的派生软件。对于修改后的本软件和本软件的派生软件，无论修改内容，未经持有 Luckshark 事先的书面同意许可，您不得分发、再许可、出租、租赁或以任何方式提供给其他接收者（不包括被许可方内部），无论是以商业用途还是非商业用途的方式。此禁令适用于所有形式的分发，包括但不限于通过网络、媒介共享、代码仓库（如GitHub）或任何其他传输手段。
+
+5.您可以二次发布本软件的派生软件，如要发布修改后的本软件，您须遵守以下条款：
+    i.持有 Luckshark 书面同意许可。
+    ii.保留本许可。
+    iii.免费发分本软件。
+    iv.标注原始作者和版权信息。保证所有的再分发行为仍然遵守本许可证的条款。
+如要发布本软件的派生软件并除修改后的本软件外，您须遵守以下条款：
+    i.持有 Luckshark 书面同意许可。
+
+6. 责任与担保限制。本软件按“现状”提供，Luckshark 不提供任何明示或暗示的担保，包括但不限于对特定用途的适用性、适销性或非侵权的保证。使用者应自行承担使用本软件所产生的风险。在任何情况下，Luckshark或其贡献者均不对因使用或无法使用本软件所导致的任何直接、间接、偶然、特殊、或后果性的损害承担责任（包括但不限于采购替代商品或服务，使用价值损失，数据损失，或商业中断），无论责任理论是合同、侵权行为（包括疏忽）或其他，且即使已被告知可能会发生此类损害。
+
+7. 专利权。通过使用本软件，用户获得非独占的全球性专利权授权，允许用户在遵守本许可证的条件下使用和操作本软件，免受 Luckshark 基于专利权提出的任何诉讼。若用户违反本许可证中的任何条款，此专利授权将自动失效。
+
+8. 贡献与合规。若您向本软件提交贡献，您同意您的贡献将根据本许可证的条款进行分发，并且您拥有该贡献的权利或已获得相关权利人的授权。您不得通过使用本软件以任何方式声明或暗示您与 Luckshark 有任何形式的合作关系，除非事先获得明确书面许可。
+
+Copy in English:
+(The English content is for informational purposes only and does not represent the content of this license:
+
+Luckshark Dedicated Public License (LDPL) v1
+
+Copyright (c) 2024 Luckshark Inc. All rights reserved.
+
+0. Definitions of Key Terms and References i. "This License" refers to the Luckshark Dedicated Public License (LDPL) v1.
+ii. "This Software" refers to any copyrighted software and related documentation files ("Software") under this License and any copies or substantial portions of it.
+iii. "Licensee" or "Recipient" refers to any person or organization in possession of this Software.
+iv. Each Licensee may also be referred to as "You."
+v. "Use" and "Operate" refer to the running, installation and deployment, modification, copying, and distribution of this Software.
+vi. "Source Code" refers to all code of this Software, including but not limited to third-party libraries and external modules, original sections of the code, as well as non-original code borrowed or excerpted from external sources.
+vii. "Platform" refers to the platform or hardware where this Software can be run and operated.
+viii. "Preserve This License" means to retain the original content of this License in its entirety. Any changes made to the content of this License will result in a derivative license, which is not considered this License.
+ix. "The Original Version of This Software" refers to the version of the Software released by Luckshark, unmodified by any Licensee.
+x. "Modified Software" includes but is not limited to: software resulting from adding/removing/modifying the source code of this Software, third-party software whose code is highly similar to the original content of this Software's source code, and derivative software where original content from this Software's source code (with or without slight modifications) is incorporated into third-party software.
+xi. "Derived Software of This Software" includes Modified Software and software whose primary functions are not implemented by This Software but contain highly original portions or full functionality of This Software (ignoring code content, considering only functionality).
+xii. "As is" means in its current state and condition.
+xiii. "Luckshark," "Luckshark Inc." refers to the organization Luckshark, which may or may not refer to the Luckshark company and can be an organization distinct from any form of entity under contemporary law.
+
+This License differs significantly from other common copyright and open licenses, particularly concerning modifications and redistribution of This Software. Please pay extra attention when using and operating This Software. The various terms and references used throughout this License are explained in the above section, "Clause (0): Definitions of Key Terms and References," and may differ from common meanings, but they are not additionally noted in the text. Please take extra care. Any Licensee using or operating This Software is deemed to have acknowledged and agreed to the content of this License.
+
+It is hereby granted to any Licensee who obtains This Software free of charge, subject to compliance with local laws, the rights under this License. When using and operating This Software, the following License must be adhered to:
+
+Licensees have the right to use This Software, and You may use and operate This Software anywhere. However, the following conditions must be observed:
+i. Any use of This Software must retain This License.
+ii. Commercial use of This Software is prohibited, including but not limited to resale, installation/use/integration in any computer programs that provide commercial services.
+iii. Use of This Software for illegal activities is prohibited, including but not limited to fraud, cyberattacks, or privacy violations.
+
+Licensees have the right to modify and copy This Software, and You may freely copy and modify any content of This Software. However, the following conditions must be observed:
+i. Any operation on This Software must retain This License.
+ii. Modified Software may only be used internally by the Licensee, and redistribution and dissemination are prohibited. For details, see Clause (4).
+iii. Modified Software may not be released or used for commercial purposes.
+iv. Licensees must ensure that all modifications to This Software comply with applicable laws and assume responsibility for any consequences arising from such modifications.
+
+Licensees have the right to distribute the original version of This Software (referred to in this clause as the "Original Software"), but the following conditions must be observed:
+i. Retain This License.
+ii. Distribute the Original Software for free.
+iii. Acknowledge the original author and copyright information. Ensure that all redistribution activities still comply with the terms of this License.
+
+Redistributing Modified Software and Derived Software of This Software without permission is prohibited. For Modified Software and Derived Software, regardless of the modifications, You may not distribute, sublicense, rent, lease, or otherwise make it available to other recipients (excluding internal use by the Licensee) without prior written consent from Luckshark, whether for commercial or non-commercial purposes. This prohibition applies to all forms of distribution, including but not limited to distribution via the network, media sharing, code repositories (such as GitHub), or any other means of transmission.
+
+You may re-release Derived Software of This Software. To release Modified Software, You must comply with the following conditions:
+i. Obtain prior written consent from Luckshark.
+ii. Retain This License.
+iii. Distribute This Software for free.
+iv. Acknowledge the original author and copyright information. Ensure that all redistribution activities still comply with the terms of this License.
+To release Derived Software (excluding Modified Software), You must comply with the following conditions:
+i. Obtain prior written consent from Luckshark.
+
+Liability and Warranty Disclaimer. This Software is provided "as is," and Luckshark makes no express or implied warranties, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. The user assumes all risks associated with using This Software. In no event shall Luckshark or its contributors be liable for any direct, indirect, incidental, special, or consequential damages arising from the use or inability to use This Software (including but not limited to the procurement of substitute goods or services, loss of use, data, or profits, or business interruption), regardless of the cause of action (contract, tort, including negligence, or otherwise), even if advised of the possibility of such damages.
+
+Patent Rights. By using This Software, the user is granted a non-exclusive, worldwide patent license allowing the user to use and operate This Software under the conditions of this License, free from any claims by Luckshark based on patent rights. If the user violates any terms of this License, this patent license will automatically terminate.
+
+Contributions and Compliance. If You submit contributions to This Software, You agree that Your contributions will be distributed under the terms of this License, and You have the right to make such contributions or have obtained the necessary permissions from the rights holders. You may not, in any way, imply or claim that You have any affiliation with Luckshark through the use of This Software unless explicitly authorized in writing beforehand.)
