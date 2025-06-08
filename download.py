@@ -3,19 +3,11 @@ import requests
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 
-import save_json
+import write_json
+from Imgbb_downloader import DOWNLOAD_DIR
+from Imgbb_downloader import headers
 
-DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-    'Accept': 'application/octet-stream',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Connection': 'keep-alive',
-}
-
 def download_file(download_url, file_name, chunk_size=1024 * 1024, retries=5, timeout=30):
     file_path = os.path.join(DOWNLOAD_DIR, file_name)
 
@@ -32,7 +24,7 @@ def download_file(download_url, file_name, chunk_size=1024 * 1024, retries=5, ti
                         if chunk:
                             f.write(chunk)
                             pbar.update(len(chunk))
-            save_json.update_status(download_url, "t")
+            write_json.update_status(download_url, "t")
             return None
         except requests.RequestException:
             attempt += 1

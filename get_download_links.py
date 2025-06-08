@@ -2,15 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-import save_json
-
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-    'Accept': 'application/octet-stream',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Connection': 'keep-alive',
-}
+import write_json
+from Imgbb_downloader import headers
 def get_download_link(p_url, retries=10, timeout=10):
     attempt = 0
     while attempt < retries:
@@ -38,7 +31,7 @@ def process_download_links(p_urls):
             failed_urls.append(p_url)
             print(f"获取失败 {i}/{str(len(p_urls))}: {p_url} ，已跳过")
         else:
-            save_json.add_link(d_url)
+            write_json.add_link(d_url)
             print(f"已提取原图链接 {i}/{str(len(p_urls))}: {d_url}")
     return failed_urls
 
@@ -46,7 +39,8 @@ def process_download_links_until_success(p_urls):
     attempt = 0
     while p_urls:
         attempt += 1
-        print(f"第 {attempt} 次尝试获取链接...")
+        if attempt > 1:
+            print(f"第 {attempt} 次尝试获取链接...")
         p_urls = process_download_links(p_urls)
         if p_urls:
             print(f"第 {attempt} 次获取共 {str(len(p_urls))} 个链接获取失败，正在重试...")

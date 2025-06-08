@@ -1,9 +1,8 @@
 import json
 import os
 
-import save_json
-
-json_file = "d_urls.json"
+import write_json
+from Imgbb_downloader import json_file
 
 def read_json():
     if not os.path.exists(json_file):
@@ -19,14 +18,18 @@ def read_json():
         print("-" * 30)
 
 def get_failed_map():
-    save_json.rename_duplicates()
-    if not os.path.exists(json_file):
+    try:
+        write_json.rename_duplicates()
+        if not os.path.exists(json_file):
+            return {}
+        with open(json_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        failed_map = {
+            url: info["filename"]
+            for url, info in data.items()
+            if info.get("status") == "f"
+        }
+        return failed_map
+    except Exception as e:
+        print(f"读取失败: {e}")
         return {}
-    with open(json_file, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    failed_map = {
-        url: info["filename"]
-        for url, info in data.items()
-        if info.get("status") == "f"
-    }
-    return failed_map
