@@ -1,5 +1,6 @@
 import os
 from config import load_config
+import config
 
 config = load_config()
 
