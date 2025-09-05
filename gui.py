@@ -20,17 +20,14 @@ class ImgbbDownloaderApp:
         app_state.headers = config["headers"]
 
     def create_widgets(self):
-        # 多行文本框：链接输入
         tk.Label(self.root, text="请输入链接（每行一个或多条）").pack(anchor="w", padx=10, pady=5)
         self.link_input = scrolledtext.ScrolledText(self.root, height=10)
         self.link_input.pack(fill="both", expand=False, padx=10)
 
-        # 日志输出框
         tk.Label(self.root, text="日志 / 状态").pack(anchor="w", padx=10, pady=5)
         self.log_output = scrolledtext.ScrolledText(self.root, height=12, state="disabled")
         self.log_output.pack(fill="both", expand=True, padx=10, pady=(0,10))
 
-        # 按钮区
         btn_frame = tk.Frame(self.root)
         btn_frame.pack(pady=10)
 
