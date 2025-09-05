@@ -1,0 +1,123 @@
+《Luckshark 专用公开许可协议（LDPL）版本 3》
+SPDX-License-Identifier: LDPL-3
+
+版权所有 © 2025 Luckshark Inc. 保留所有权利。
+
+本软件依照本《Luckshark 专用公开许可协议》（以下简称“本许可”）授权使用。访问、使用、复制、修改或分发本软件即表示您同意接受并遵守本许可的全部条款。
+
+第一条 术语定义
+“本软件” 指由 Luckshark Inc. 发布的源代码、可执行文件、文档及其附属材料。
+“您” 或 “被许可方” 指任何获取、使用、复制、修改或分发本软件的个人或实体。
+“非商业用途” 指不以直接或间接获取经济利益、金钱收益、广告收益或商业优势为目的的使用。
+“派生作品” 指基于本软件的全部或部分内容所进行的修改、衍生或组合创作。
+“公开平台” 指任何可公开访问的软件托管平台，如 GitHub、Gitee、Bitbucket 等。
+
+第二条 授权许可
+2.1 使用权
+您可在非商业目的下，自由使用、运行、研究和部署本软件。
+2.2 修改与再发布
+您可在非商业前提下修改并再发布本软件或其派生作品，前提是满足以下条件：
+(i) 保留本许可文本完整不变；
+(ii) 明确声明修改后的作品为本软件的派生版本；
+(iii) 在公开平台上提供源代码；
+(iv) 所有再发布行为必须保持非商业性质。
+2.3 原始版本的非商业分发
+未经修改的本软件可在非商业场景中自由分发，但必须满足：
+(i) 本许可文本必须完整保留并随附提供。
+2.4 非商业教育用途豁免权
+以下教育用途在本许可下被视为非商业用途，可适用第二条中的授权许可：
+(i) 在 K-12、公立学校、高等教育机构的正规课程中使用本软件；
+(ii) 在非营利组织或公益性项目中用于教学、演示或研究。
+以下行为被视为商业用途，不受本许可授权，且构成违约：
+(i) 在私营培训机构或付费在线课程平台（如 Udemy、Coursera）中使用；
+(ii) 在高校或科研机构的对外有偿合作项目中使用；
+(iii) 将本软件整合进收费教材、教学系统或平台并进行销售或商业部署。
+
+第三条 限制条款
+在任何情况下，以下行为均被明令禁止：
+(i) 任何形式的商业使用，包括但不限于销售、出租、嵌入商业产品或提供商业服务；
+(ii) 在闭源或专有项目中集成本软件；
+(iii) 删除、遮蔽或修改版权声明、原始作者署名或本许可文本。
+
+第四条 知识产权与免责声明
+本软件按“现状”提供，Luckshark Inc. 不提供任何明示或暗示的保证，包括但不限于适销性、特定用途适用性或不侵权性。因使用或无法使用本软件而产生的任何直接或间接损失（包括但不限于数据丢失、业务中断或利润损失），Luckshark Inc. 概不承担责任。
+
+第五条 专利授权
+在遵守本许可条款的前提下，Luckshark Inc. 授予您全球范围内的、免费、非排他性的专利使用权，以使用本软件。如违反本许可条款，该专利授权自动终止。
+
+第六条 贡献内容
+若您向本软件提交贡献内容，表示您拥有该内容的相关知识产权，或已获得合法授权，并同意依照本许可授权该贡献的使用和再分发。
+
+第七条 法律适用与争议解决
+本许可受中华人民共和国法律管辖。若因本许可产生争议，双方应首先友好协商解决；协商不成时，任一方可将争议提交至 Luckshark Inc. 注册地有管辖权的人民法院处理。
+
+第八条 条款终止
+如您违反本许可条款，您的使用权利将自动终止，并且不得继续使用、复制、修改或传播本软件或其派生作品。
+
+第九条 协议版本
+本许可为由 Luckshark Inc. 发布的 3.1 版本。后续可能发布修订版本，用户应主动查阅更新。旧版本可继续使用，但推荐采用新版本以获取更完善条款。
+
+第十条 语言说明
+本许可提供中文与英文两个版本。如两者存在差异或争议，以中文版为准。
+
+Luckshark Dedicated Public License (LDPL) v3
+SPDX-License-Identifier: LDPL-3.1
+
+© 2025 Luckshark Inc. All rights reserved.
+
+This software is licensed under the terms of this Luckshark Dedicated Public License (“License”). By accessing, using, copying, modifying, or distributing the software, you agree to be bound by the terms and conditions of this License.
+
+1. Definitions
+"Software" refers to the source code, binaries, documents, and all associated materials released by Luckshark Inc.
+"You" or "Licensee" refers to any individual or entity that obtains, uses, copies, modifies, or distributes the Software.
+"Non-Commercial Use" means any use that is not intended for or directed toward commercial advantage or monetary compensation.
+"Derivative Work" means any modification, adaptation, or work based upon the Software, in whole or in part.
+"Public Platform" refers to a publicly accessible software repository such as GitHub, Gitee, or Bitbucket.
+
+2. Grant of Rights
+2.1 Usage
+You are granted the right to use, execute, study, and deploy the Software for non-commercial purposes only.
+2.2 Modification and Redistribution
+You may modify and redistribute the Software or its Derivative Works under the following conditions:
+(i) The redistribution remains non-commercial;
+(ii) The modified version must retain this License in its entirety;
+(iii) You must clearly indicate that your version is a Derivative Work of the original Software;
+(iv) Source code of Derivative Works must be made available on a Public Platform.
+2.3 Unmodified Redistribution
+Redistribution of unmodified copies of the Software is permitted for non-commercial purposes under the following conditions:
+(i) This License must be included in full and remain unaltered.
+2.4 Educational Use Exception
+The following educational activities are considered Non-Commercial Use and are eligible under Section 2 above:
+(i) Use in official courses of K-12 schools, public educational institutions, or accredited universities;
+(ii) Use in non-profit or public-interest educational or research projects.
+The following activities are considered Commercial Use, are not permitted under this License, and constitute a breach:
+(i) Use by private training institutions or paid online learning platforms (e.g., Udemy, Coursera);
+(ii) Use in externally funded academic or research collaborations involving compensation;
+(iii) Integration of the Software into paid teaching materials, educational platforms, or systems for sale or commercial deployment.
+
+3. Prohibited Uses
+The following are strictly prohibited under any circumstances:
+(i) Any commercial use, including but not limited to selling, leasing, sublicensing, or incorporating into commercial systems or services;
+(ii) Incorporating the Software into closed-source or proprietary software;
+(iii) Removing, obscuring, or modifying copyright notices, author credits, or this License.
+
+4. Intellectual Property & Warranty Disclaimer
+The Software is provided “AS IS”, without warranty of any kind, express or implied. Luckshark Inc. makes no representations or warranties regarding merchantability, fitness for a particular purpose, or non-infringement. You bear all risks associated with using the Software. Luckshark Inc. shall not be liable for any damages, including but not limited to data loss, business interruption, or lost profits.
+
+5. Patent Grant
+Subject to compliance with this License, Luckshark Inc. hereby grants you a worldwide, royalty-free, non-exclusive patent license to use the Software. If you breach the terms of this License, this patent license shall automatically terminate.
+
+6. Contributions
+By submitting contributions to the Software, you affirm that you have the legal right to do so, and that you grant Luckshark Inc. and the public a license to use, modify, and distribute such contributions under this License.
+
+7. Governing Law and Dispute Resolution
+This License shall be governed by the laws of the People’s Republic of China. Any disputes arising from this License shall first be resolved amicably. If resolution is not achieved, either party may submit the dispute to the People’s Court with jurisdiction over the location of Luckshark Inc.
+
+8. Termination
+If you violate the terms of this License, your rights under this License shall automatically terminate. Upon termination, you must cease all use, reproduction, modification, and distribution of the Software and its Derivative Works.
+
+9. License Versions
+This License is version 3.1 as published by Luckshark Inc. Future versions may be released. Users are encouraged to check for updates. Use of older versions is permitted, but newer versions may offer additional clarifications.
+
+10. Language
+This License is provided in both Chinese and English. In case of any discrepancy or dispute, the Chinese version shall prevail.
