@@ -87,7 +87,7 @@ class ImgbbDownloaderApp:
             import download
             import read_json
             try:
-                download.download_files_concurrently(read_json.get_failed_map(log_func=self.log))
+                download.download_files_concurrently(read_json.get_failed_map(log_func=self.log), log_func=self.log)
                 self.log("下载完成！")
             except Exception as e:
                 self.log(f"发生错误：{e}")
