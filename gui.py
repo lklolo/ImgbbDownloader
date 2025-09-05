@@ -31,8 +31,8 @@ class ImgbbDownloaderApp(QWidget):
         """)
 
         self.config = load_config(log_func=self.log)
-        app_state.DOWNLOAD_DIR = self.config["download_dir"]
-        app_state.json_file = self.config["download_list_file"]
+        app_state.DOWNLOAD_DIR = self.config["download_directory"]
+        app_state.json_file = self.config["task_status"]
         app_state.headers = self.config["headers"]
 
         self.completed_files = 0
