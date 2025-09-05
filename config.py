@@ -1,4 +1,5 @@
 import os
+
 import yaml
 
 CONFIG_FILE = "config.yaml"
@@ -14,7 +15,7 @@ default_config = {
     }
 }
 
-def load_config():
+def load_config(log_func=print):
     if not os.path.exists(CONFIG_FILE):
         write_config(default_config)
         return default_config
@@ -25,11 +26,11 @@ def load_config():
                 raise ValueError("配置格式错误：应为字典类型")
             return merge_with_default(config, default_config)
     except (yaml.YAMLError, ValueError) as e:
-        print(f"配置文件读取失败：{e}")
+        log_func(f"配置文件读取失败：{e}")
         backup_path = CONFIG_FILE + ".bak"
         os.rename(CONFIG_FILE, backup_path)
-        print(f"已将损坏的配置重命名为：{backup_path}")
-        print("正在恢复默认配置...")
+        log_func(f"已将损坏的配置重命名为：{backup_path}")
+        log_func("正在恢复默认配置...")
         write_config(default_config)
         return default_config
 

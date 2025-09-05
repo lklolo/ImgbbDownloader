@@ -1,8 +1,7 @@
 import json
 import os
 from urllib.parse import urlparse
-
-from Imgbb_downloader import json_file
+from app_state import json_file
 
 def extract_filename(url):
     path = urlparse(url).path
@@ -62,4 +61,3 @@ def clear_json():
     if os.path.exists(json_file):
         with open(json_file, "w", encoding="utf-8") as f:
             json.dump({}, f, ensure_ascii=False, indent=4)
-            

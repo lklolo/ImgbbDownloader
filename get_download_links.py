@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import time
 
 import write_json
-from Imgbb_downloader import headers
+from app_state import headers
 
 def get_download_link(p_url, retries=10, timeout=10, log_func=print):
     attempt = 0

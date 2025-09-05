@@ -5,22 +5,19 @@ import threading
 import re
 
 from config import load_config
-import get_download_links
-import download
-import read_json
-import write_json
-
-config = load_config()
-DOWNLOAD_DIR = config["download_dir"]
-json_file = config["download_list_file"]
+import app_state
 
 class ImgbbDownloaderApp:
     def __init__(self, root):
+        self.log_output = None
         self.root = root
         root.title("Imgbb 批量原图下载器")
         root.geometry("600x500")
-
         self.create_widgets()
+        config = load_config(log_func=self.log)
+        app_state.DOWNLOAD_DIR = config["download_dir"]
+        app_state.json_file = config["download_list_file"]
+        app_state.headers = config["headers"]
 
     def create_widgets(self):
         # 多行文本框：链接输入
@@ -53,8 +50,9 @@ class ImgbbDownloaderApp:
         input_text = self.link_input.get("1.0", "end")
         links = re.findall(r'https://ibb\.co/[a-zA-Z0-9]+', input_text)
         return list(set(links))
-
+    
     def start_new_task(self):
+        import write_json
         links = self.extract_links()
         if not links:
             messagebox.showwarning("提示", "没有检测到任何有效链接")
@@ -64,10 +62,13 @@ class ImgbbDownloaderApp:
         write_json.clear_json()
 
         def worker():
+            import read_json
+            import download
+            import get_download_links
             try:
                 get_download_links.process_download_links_until_success(links, log_func=self.log)
                 self.log("原图链接获取成功，开始下载...")
-                download.download_files_concurrently(read_json.get_failed_map(), log_func=self.log)
+                download.download_files_concurrently(read_json.get_failed_map(log_func=self.log), log_func=self.log)
                 self.log("下载完成！")
             except Exception as e:
                 self.log(f"发生错误：{e}")
@@ -75,6 +76,7 @@ class ImgbbDownloaderApp:
         threading.Thread(target=worker).start()
 
     def resume_last_task(self):
+        from app_state import json_file
         if not os.path.exists(json_file) or os.path.getsize(json_file) == 0:
             messagebox.showinfo("提示", "未找到上次下载任务")
             return
@@ -82,8 +84,10 @@ class ImgbbDownloaderApp:
         self.log("恢复上次下载任务...")
 
         def worker():
+            import download
+            import read_json
             try:
-                download.download_files_concurrently(read_json.get_failed_map())
+                download.download_files_concurrently(read_json.get_failed_map(log_func=self.log))
                 self.log("下载完成！")
             except Exception as e:
                 self.log(f"发生错误：{e}")

@@ -4,8 +4,7 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 
 import write_json
-from Imgbb_downloader import DOWNLOAD_DIR
-from Imgbb_downloader import headers
+from app_state import DOWNLOAD_DIR, headers
 
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 

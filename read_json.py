@@ -2,7 +2,7 @@ import json
 import os
 
 import write_json
-from Imgbb_downloader import json_file
+from app_state import json_file
 
 def read_json():
     if not os.path.exists(json_file):
@@ -17,7 +17,7 @@ def read_json():
         print(f"状态: {info['status']}")
         print("-" * 30)
 
-def get_failed_map():
+def get_failed_map(log_func=print):
     try:
         write_json.rename_duplicates()
         if not os.path.exists(json_file):
@@ -31,5 +31,5 @@ def get_failed_map():
         }
         return failed_map
     except Exception as e:
-        print(f"读取失败: {e}")
+        log_func(f"读取失败: {e}")
         return {}
