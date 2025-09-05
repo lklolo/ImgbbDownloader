@@ -23,7 +23,6 @@ def download_file(download_url, file_name, log_func=print, chunk_size=1024*1024,
             write_json.update_status(download_url, "t")
             log_func(f"[完成] {file_name}")
 
-            # 下载完成后回调进度
             if progress_callback:
                 progress_callback(file_index, total_files)
 
@@ -49,7 +48,6 @@ def download_files_concurrently(url_to_filename_map, log_func=print, max_workers
             )
             futures[future] = url
 
-        # 等待所有文件完成
         for future in futures:
             result = future.result()
             if result:

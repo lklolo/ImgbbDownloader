@@ -1,5 +1,4 @@
 import os
-from config import load_config
 import config as config_module
 
 config = config_module.load_config()

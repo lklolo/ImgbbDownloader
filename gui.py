@@ -11,7 +11,6 @@ from PyQt6.QtCore import Qt, pyqtSignal, QObject
 from config import load_config
 import app_state
 
-# ----------------- 线程安全日志 -----------------
 class Logger(QObject):
     log_signal = pyqtSignal(str)
     progress_signal = pyqtSignal(int)
@@ -19,14 +18,12 @@ class Logger(QObject):
 
 logger = Logger()
 
-# ----------------- 主窗口 -----------------
 class ImgbbDownloaderApp(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Imgbb 批量原图下载器")
         self.resize(700, 550)
 
-        # 深色主题
         self.setStyleSheet("""
             QWidget { background-color: #2b2b2b; color: #ffffff; font-family: Arial; }
         """)
@@ -50,7 +47,6 @@ class ImgbbDownloaderApp(QWidget):
         main_layout.setContentsMargins(15, 15, 15, 15)
         main_layout.setSpacing(10)
 
-        # 链接输入区
         input_frame = QFrame()
         input_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
         input_layout = QVBoxLayout(input_frame)
@@ -65,7 +61,6 @@ class ImgbbDownloaderApp(QWidget):
         input_layout.addWidget(self.link_input)
         main_layout.addWidget(input_frame)
 
-        # 日志区
         log_frame = QFrame()
         log_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
         log_layout = QVBoxLayout(log_frame)
@@ -80,7 +75,6 @@ class ImgbbDownloaderApp(QWidget):
         log_layout.addWidget(self.log_output)
         main_layout.addWidget(log_frame, stretch=1)
 
-        # 进度条
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
         self.progress_bar.setTextVisible(True)
@@ -90,7 +84,6 @@ class ImgbbDownloaderApp(QWidget):
         """)
         main_layout.addWidget(self.progress_bar)
 
-        # 按钮区
         btn_layout = QHBoxLayout()
         self.start_btn = QPushButton("开始新任务")
         self.start_btn.clicked.connect(self.start_new_task)
@@ -100,7 +93,6 @@ class ImgbbDownloaderApp(QWidget):
         btn_layout.addWidget(self.resume_btn)
         main_layout.addLayout(btn_layout)
 
-    # ----------------- 日志/进度 -----------------
     def log(self, msg: str):
         logger.log_signal.emit(msg)
 
@@ -114,13 +106,11 @@ class ImgbbDownloaderApp(QWidget):
     def _update_progress(self, value: int):
         self.progress_bar.setValue(value)
 
-    # ----------------- 链接提取 -----------------
     def extract_links(self):
         input_text = self.link_input.toPlainText()
         links = re.findall(r'https://ibb\.co/[a-zA-Z0-9]+', input_text)
         return list(set(links))
 
-    # ----------------- 开始新任务 -----------------
     def start_new_task(self):
         import write_json, read_json, download, get_download_links
 
@@ -134,17 +124,14 @@ class ImgbbDownloaderApp(QWidget):
 
         def worker():
             try:
-                # 获取原图链接（不显示进度条）
                 get_download_links.process_download_links_until_success(links, log_func=self.log)
                 self.log("原图链接获取成功，开始下载...")
 
-                # 获取文件列表
                 url_map = read_json.get_failed_map(log_func=self.log)
                 self.total_files = len(url_map)
                 self.completed_files = 0
                 logger.max_progress_signal.emit(self.total_files)
 
-                # 下载文件，支持进度条
                 download.download_files_concurrently(
                     url_map,
                     log_func=self.log,
@@ -180,14 +167,11 @@ class ImgbbDownloaderApp(QWidget):
                 self.log("下载完成！")
             except Exception as e:
                 self.log(f"发生错误：{e}")
-
         threading.Thread(target=worker, daemon=True).start()
 
-    # ----------------- 进度更新 -----------------
     def update_progress_signal(self, idx, total):
         self.completed_files += 1
         logger.progress_signal.emit(self.completed_files)
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
