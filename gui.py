@@ -2,6 +2,8 @@ import sys
 import os
 import re
 import threading
+
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QTextEdit, QPushButton, QMessageBox, QFrame, QProgressBar,
@@ -25,7 +27,7 @@ class ImgbbDownloaderApp(QWidget):
         super().__init__()
         self.setWindowTitle("Imgbb 批量原图下载器")
         self.resize(700, 1000)
-
+        self.setWindowIcon(QIcon("icon.ico"))
         self.setStyleSheet("""
             QWidget { background-color: #2b2b2b; color: #ffffff; font-family: Arial; }
         """)
