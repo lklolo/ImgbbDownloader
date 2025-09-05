@@ -1,8 +1,9 @@
 import os
 from config import load_config
-import config
+import config as config_module
 
-config = load_config()
+config = config_module.load_config()
+
 
 DOWNLOAD_DIR = config["download_dir"]
 json_file = config["download_list_file"]
