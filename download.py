@@ -10,10 +10,6 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 def download_file(download_url, file_name, log_func=print, chunk_size=1024*1024,
                   retries=5, timeout=30, file_index=0, total_files=1,
                   progress_callback=None):
-    """
-    下载单个文件，完成后调用 progress_callback(file_index, total_files, file_name, status)
-    status: "下载中" / "已完成" / "失败"
-    """
     file_path = os.path.join(DOWNLOAD_DIR, file_name)
     attempt = 0
 
@@ -37,7 +33,6 @@ def download_file(download_url, file_name, log_func=print, chunk_size=1024*1024,
             attempt += 1
             log_func(f"[重试 {attempt}/{retries}] {file_name} 下载失败: {e}")
 
-    # 超过重试次数仍失败
     if progress_callback:
         progress_callback(file_index, total_files, file_name, "失败")
     return download_url
