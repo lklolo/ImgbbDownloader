@@ -57,7 +57,7 @@ class ImgbbDownloaderApp(QWidget):
         input_layout = QVBoxLayout(input_frame)
         input_layout.setContentsMargins(12, 12, 12, 12)
 
-        input_label = QLabel("请输入链接（每行一个或多条）")
+        input_label = QLabel("请输入链接")
         input_layout.addWidget(input_label)
 
         self.link_input = QTextEdit()
@@ -107,6 +107,9 @@ class ImgbbDownloaderApp(QWidget):
         self.resume_btn.clicked.connect(self.resume_last_task)
         btn_layout.addWidget(self.resume_btn)
         main_layout.addLayout(btn_layout)
+        self.pause_btn = QPushButton("暂停")
+        self.pause_btn.clicked.connect(self.toggle_pause)
+        btn_layout.addWidget(self.pause_btn)
 
     def log(self, msg: str):
         logger.log_signal.emit(msg)
@@ -135,9 +138,9 @@ class ImgbbDownloaderApp(QWidget):
                 break
 
     def update_progress_signal(self, file_index, total_files, file_name, status):
-        # 更新文件状态
+
         logger.file_status_signal.emit(file_name, status)
-        # 更新进度条
+
         if status in ["已完成", "失败"]:
             self.completed_files += 1
             logger.progress_signal.emit(self.completed_files)
@@ -216,6 +219,24 @@ class ImgbbDownloaderApp(QWidget):
 
         threading.Thread(target=worker, daemon=True).start()
 
+    def closeEvent(self, event):
+        from app_state import shutdown_event, pause_event
+        pause_event.set()
+        shutdown_event.set()
+        self.log("正在安全退出程序...")
+        event.accept()
+
+    def toggle_pause(self):
+        from app_state import pause_event
+
+        if pause_event.is_set():
+            pause_event.clear()
+            self.pause_btn.setText("继续")
+            self.log("⏸ 下载已暂停")
+        else:
+            pause_event.set()
+            self.pause_btn.setText("暂停")
+            self.log("▶ 下载已继续")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

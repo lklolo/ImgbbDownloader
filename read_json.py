@@ -22,14 +22,16 @@ def get_failed_map(log_func=print):
         write_json.rename_duplicates()
         if not os.path.exists(json_file):
             return {}
+
         with open(json_file, "r", encoding="utf-8") as f:
             data = json.load(f)
-        failed_map = {
+
+        return {
             url: info["filename"]
             for url, info in data.items()
-            if info.get("status") == "f"
+            if info.get("status") != "t"
         }
-        return failed_map
+
     except Exception as e:
         log_func(f"读取失败: {e}")
         return {}
