@@ -7,7 +7,7 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QTextEdit, QPushButton, QMessageBox, QFrame, QProgressBar,
-    QTableWidget, QTableWidgetItem
+    QTableWidget, QTableWidgetItem, QAbstractItemView
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QObject
 
@@ -83,6 +83,7 @@ class ImgbbDownloaderApp(QWidget):
         self.file_table = QTableWidget()
         self.file_table.setColumnCount(2)
         self.file_table.setHorizontalHeaderLabels(["文件名 / 链接", "状态"])
+        self.file_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.file_table.setStyleSheet("""
             QTableWidget { background-color: #2b2b2b; color: #ffffff; gridline-color:#555555; }
             QHeaderView::section { background-color:#3c3f41; color:#ffffff; }
