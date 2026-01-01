@@ -3,6 +3,7 @@ import os
 import time
 import threading
 from urllib.parse import urlparse
+
 from app_state import json_file
 
 _lock = threading.Lock()
@@ -20,7 +21,7 @@ def load_data():
 def save_data(data):
     with open(json_file, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-
+        
 def add_link(url):
     with _lock:
         data = load_data()
@@ -82,6 +83,22 @@ def rename_duplicates():
                 updated = True
         if updated:
             save_data(data)
+
+def get_failed_map(log_func=print):
+    try:
+        rename_duplicates()
+        if not os.path.exists(json_file):
+            return {}
+        with open(json_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return {
+            url: info["filename"]
+            for url, info in data.items()
+            if info.get("status") != "t"
+        }
+    except Exception as e:
+        log_func(f"读取失败: {e}")
+        return {}
 
 def clear_json():
     with _lock:

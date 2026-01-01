@@ -1,8 +1,7 @@
 import os
-
 import yaml
 
-CONFIG_FILE = "config.yaml"
+CONFIG_FILE = "Config.yaml"
 default_config = {
     "download_directory": "downloads",
     "task_status": "TaskStatus.json",

@@ -1,10 +1,10 @@
 import os
 import time
 import requests
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, CancelledError
 
-import write_json
-from app_state import DOWNLOAD_DIR, headers, shutdown_event
+import json_editor
+from app_state import DOWNLOAD_DIR, headers
 from app_state import shutdown_event, pause_event
 
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
@@ -24,13 +24,28 @@ def check_file_complete_by_head(url, file_path, timeout=10):
         if resp.status_code != 200:
             return None
 
-        size = resp.headers.get("Content-Length")
-        if not size:
+        content_length = resp.headers.get("Content-Length")
+        if content_length is None:
             return None
 
-        return os.path.getsize(file_path) == int(size)
+        try:
+            remote_size = int(content_length)
+        except ValueError:
+            return None
 
-    except Exception:
+        local_size = os.path.getsize(file_path)
+        return local_size == remote_size
+
+    except requests.exceptions.Timeout:
+        return None
+
+    except requests.exceptions.ConnectionError:
+        return None
+
+    except requests.exceptions.RequestException:
+        return None
+
+    except OSError:
         return None
 
 def download_file(download_url, file_name, log_func=print,
@@ -46,13 +61,13 @@ def download_file(download_url, file_name, log_func=print,
 
     head_ok = check_file_complete_by_head(download_url, file_path)
     if head_ok is True:
-        write_json.update_status(download_url, "t")
+        json_editor.update_status(download_url, "t")
         log_func(f"[跳过] {file_name} 已完整（HEAD）")
         if progress_callback:
             progress_callback(file_index, total_files, file_name, "已完成")
         return None
 
-    data = write_json.load_data().get(download_url, {})
+    data = json_editor.load_data().get(download_url, {})
     downloaded = data.get("downloaded", 0)
 
     if os.path.exists(file_path):
@@ -99,13 +114,13 @@ def download_file(download_url, file_name, log_func=print,
                             f.write(chunk)
                             downloaded += len(chunk)
 
-                            write_json.update_progress(
+                            json_editor.update_progress(
                                 download_url,
                                 downloaded,
                                 total
                             )
 
-            write_json.update_status(download_url, "t")
+            json_editor.update_status(download_url, "t")
             log_func(f"[完成] {file_name}")
             if progress_callback:
                 progress_callback(file_index, total_files, file_name, "已完成")
@@ -121,11 +136,11 @@ def download_file(download_url, file_name, log_func=print,
                     os.remove(file_path)
 
                 downloaded = 0
-                write_json.update_progress(download_url, 0, None)
+                json_editor.update_progress(download_url, 0, None)
                 continue
 
             wait = 2 ** (attempt - 1)
-            write_json.update_status(download_url, "f", str(e))
+            json_editor.update_status(download_url, "f", str(e))
             log_func(
                 f"[重试 {attempt}/{retries}] {file_name} 失败: {e}，{wait}s 后重试"
             )
@@ -134,7 +149,7 @@ def download_file(download_url, file_name, log_func=print,
         except Exception as e:
             attempt += 1
             wait = 2 ** (attempt - 1)
-            write_json.update_status(download_url, "f", str(e))
+            json_editor.update_status(download_url, "f", str(e))
             log_func(
                 f"[重试 {attempt}/{retries}] {file_name} 失败: {e}，{wait}s 后重试"
             )
@@ -145,12 +160,13 @@ def download_file(download_url, file_name, log_func=print,
 
     return download_url
 
-def download_files_concurrently(url_to_filename_map,
-                                log_func=print,
-                                max_workers=6,
-                                retries=5,
-                                progress_callback=None):
-
+def download_files_concurrently(
+        url_to_filename_map,
+        log_func=print,
+        max_workers=6,
+        retries=5,
+        progress_callback=None
+):
     urls = list(url_to_filename_map.items())
     total_files = len(urls)
     failed = []
@@ -162,27 +178,34 @@ def download_files_concurrently(url_to_filename_map,
             if shutdown_event.is_set():
                 break
 
-            futures.append(
-                executor.submit(
-                    download_file,
-                    url,
-                    filename,
-                    log_func,
-                    retries=retries,
-                    file_index=idx,
-                    total_files=total_files,
-                    progress_callback=progress_callback
-                )
+            future = executor.submit(
+                download_file,
+                url,
+                filename,
+                log_func,
+                timeout=30,
+                chunk_size=1024 * 1024,
+                retries=retries,
+                file_index=idx,
+                total_files=total_files,
+                progress_callback=progress_callback
             )
+            futures.append(future)
 
-        for f in futures:
+        for future in futures:
             if shutdown_event.is_set():
                 break
+
             try:
-                res = f.result()
+                res = future.result()
                 if res:
                     failed.append(res)
-            except Exception:
-                pass
+
+            except CancelledError:
+                log_func("下载任务被取消")
+
+            except Exception as e:
+                log_func(f"下载线程异常: {e}")
+                failed.append("unknown")
 
     return failed

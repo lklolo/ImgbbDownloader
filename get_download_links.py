@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-import write_json
+import json_editor
 from app_state import headers
 
 def get_download_link(p_url, retries=10, timeout=10, log_func=print):
@@ -33,7 +33,7 @@ def process_download_links(p_urls, log_func=print):
             failed_urls.append(p_url)
             log_func(f"[失败 {i}/{len(p_urls)}] {p_url} 已跳过")
         else:
-            write_json.add_link(d_url)
+            json_editor.add_link(d_url)
             log_func(f"[成功 {i}/{len(p_urls)}] 已提取原图链接 {d_url}")
     return failed_urls
 
