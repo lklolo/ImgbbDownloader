@@ -4,22 +4,21 @@ import re
 import threading
 
 from PyQt6.QtGui import QIcon
-from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QTextEdit, QPushButton, QMessageBox, QFrame, QProgressBar,
     QTableWidget, QTableWidgetItem, QAbstractItemView
 )
+from PyQt6.QtCore import Qt, pyqtSignal, QObject
 
-import json_editor
-import app_state
 from config import load_config
+import app_state
 
 class Logger(QObject):
     log_signal = pyqtSignal(str)
     progress_signal = pyqtSignal(int)
     max_progress_signal = pyqtSignal(int)
-    file_status_signal = pyqtSignal(str, str)
+    file_status_signal = pyqtSignal(str, str)  # file_name, status
 
 logger = Logger()
 
@@ -153,7 +152,7 @@ class ImgbbDownloaderApp(QWidget):
         return list(set(links))
 
     def start_new_task(self):
-        import json, download, get_download_links
+        import json_editor, download, get_download_links
 
         links = self.extract_links()
         if not links:
@@ -191,7 +190,7 @@ class ImgbbDownloaderApp(QWidget):
 
     def resume_last_task(self):
         from app_state import json_file
-        import download, json
+        import download, json_editor
 
         if not os.path.exists(json_file) or os.path.getsize(json_file) == 0:
             QMessageBox.information(self, "提示", "未找到上次下载任务")
@@ -199,7 +198,7 @@ class ImgbbDownloaderApp(QWidget):
 
         self.log("恢复上次下载任务...")
 
-        url_map = json.get_failed_map(log_func=self.log)
+        url_map = json_editor.get_failed_map(log_func=self.log)
         self.total_files = len(url_map)
         self.completed_files = 0
         logger.max_progress_signal.emit(self.total_files)
