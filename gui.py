@@ -61,6 +61,7 @@ class ImgbbDownloaderApp(QWidget):
         input_layout.addWidget(input_label)
 
         self.link_input = QTextEdit()
+        self.link_input.setAcceptRichText(False)
         self.link_input.setFixedHeight(150)
         self.link_input.setStyleSheet("background-color: #2b2b2b; color: #ffffff; border:1px solid #555555; border-radius:5px;")
         input_layout.addWidget(self.link_input)
