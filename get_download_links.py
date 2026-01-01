@@ -1,48 +1,148 @@
+import re
 import requests
-from bs4 import BeautifulSoup
-import time
+from lxml.etree import HTML
 
 import json_editor
-from app_state import headers
 
-def get_download_link(p_url, retries=10, timeout=10, log_func=print):
-    attempt = 0
-    while attempt < retries:
+# =========================
+# 判断相册是否需要密码
+# （严格按 demo：是否存在 content-password）
+# =========================
+def album_need_password(html: str) -> bool:
+    return 'name="content-password"' in html
+
+
+# =========================
+# 相册解锁（100% demo 等价）
+# =========================
+def unlock_album(session: requests.Session, album_url: str, password: str):
+    r = session.get(album_url, timeout=10)
+    r.raise_for_status()
+
+    # 提取 auth_token（关键）
+    token = re.search(r'name="auth_token" value="([^"]+)"', r.text)
+    if not token:
+        return False, "未找到 auth_token"
+
+    auth_token = token.group(1)
+
+    data = {
+        "content-password": password,
+        "auth_token": auth_token
+    }
+
+    res = session.post(
+        album_url,
+        data=data,
+        headers={
+            "Referer": album_url,
+            "Origin": "https://ibb.co"
+        },
+        timeout=10
+    )
+    res.raise_for_status()
+
+    # 如果解锁失败，页面中仍然存在密码表单
+    if album_need_password(res.text):
+        return False, "相册密码错误"
+
+    return True, "相册解锁成功"
+
+
+# =========================
+# 解析相册中所有图片页面（你 demo 的方式）
+# =========================
+def extract_image_pages(session: requests.Session, album_url: str, log_func=print):
+    image_pages = []
+    page = 1
+
+    while True:
+        url = f"{album_url}?page={page}"
+        r = session.get(url, timeout=10)
+        r.raise_for_status()
+
+        html = r.text
+
+        links = re.findall(r"https://ibb\.co/[a-zA-Z0-9]{7,8}", html)
+        links = list(dict.fromkeys(links))
+
+        new_links = [l for l in links if l not in image_pages]
+        if not new_links:
+            break
+
+        image_pages.extend(new_links)
+        log_func(f"📄 相册第 {page} 页，累计 {len(image_pages)} 张")
+        page += 1
+
+    return image_pages
+
+
+# =========================
+# 提取原图链接（demo 原方法）
+# =========================
+def extract_original_image_url(session: requests.Session, image_page_url: str) -> str:
+    r = session.get(image_page_url, timeout=10)
+    r.raise_for_status()
+
+    m = re.search(r'<meta property="og:image" content="([^"]+)"', r.text)
+    if not m:
+        raise RuntimeError("未找到原图链接")
+
+    return m.group(1)
+
+
+# =========================
+# GUI 调用的主入口
+# =========================
+def process_download_links_until_success(
+        links,
+        log_func=print,
+        album_password=None
+):
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0",
+        "Referer": "https://ibb.co",
+        "Origin": "https://ibb.co"
+    })
+
+    for link in links:
         try:
-            response = requests.get(p_url, headers=headers, timeout=timeout)
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                download_link = soup.find('a', {'class': 'btn btn-download default'})
-                if download_link and 'href' in download_link.attrs:
-                    return download_link['href']
-                else:
-                    return None
+            # ================= 单张图片（原逻辑） =================
+            if "/album/" not in link:
+                img_url = extract_original_image_url(session, link)
+                json_editor.add_link(img_url)
+                continue
+
+            # ================= 相册 =================
+            log_func(f"📁 解析相册：{link}")
+
+            r = session.get(link, timeout=10)
+            r.raise_for_status()
+
+            # 判断是否需要密码
+            if album_need_password(r.text):
+                if not album_password:
+                    raise RuntimeError("该相册需要密码")
+
+                ok, msg = unlock_album(session, link, album_password)
+                if not ok:
+                    raise RuntimeError(msg)
+
+                log_func("🔓 相册解锁成功")
             else:
-                return None
-        except requests.RequestException as e:
-            attempt += 1
-            log_func(f"请求失败，重试 {attempt}/{retries} 次... 错误: {e}")
-            time.sleep(2)
-    return None
+                log_func("🔓 相册无需解锁")
 
-def process_download_links(p_urls, log_func=print):
-    failed_urls = []
-    for i, p_url in enumerate(p_urls, 1):
-        d_url = get_download_link(p_url, log_func=log_func)
-        if d_url is None:
-            failed_urls.append(p_url)
-            log_func(f"[失败 {i}/{len(p_urls)}] {p_url} 已跳过")
-        else:
-            json_editor.add_link(d_url)
-            log_func(f"[成功 {i}/{len(p_urls)}] 已提取原图链接 {d_url}")
-    return failed_urls
+            # 解锁后解析图片
+            pages = extract_image_pages(session, link, log_func)
+            if not pages:
+                raise RuntimeError("❗ 相册中未解析到任何图片")
 
-def process_download_links_until_success(p_urls, log_func=print):
-    attempt = 0
-    while p_urls:
-        attempt += 1
-        if attempt > 1:
-            log_func(f"第 {attempt} 次尝试获取链接...")
-        p_urls = process_download_links(p_urls, log_func=log_func)
-        if p_urls:
-            log_func(f"第 {attempt} 次获取失败 {len(p_urls)} 个链接，正在重试...")
+            log_func(f"📁 相册共 {len(pages)} 张图片")
+
+            for page_url in pages:
+                img_url = extract_original_image_url(session, page_url)
+                json_editor.add_link(img_url)
+
+        except Exception as e:
+            log_func(f"❗ 解析失败 {link} → {e}")

@@ -202,10 +202,10 @@ def download_files_concurrently(
                     failed.append(res)
 
             except CancelledError:
-                log_func("下载任务被取消")
+                log_func("❌ 下载任务被取消")
 
             except Exception as e:
-                log_func(f"下载线程异常: {e}")
+                log_func(f"❗ 下载线程异常: {e}")
                 failed.append("unknown")
 
     return failed

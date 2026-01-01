@@ -97,7 +97,7 @@ def get_failed_map(log_func=print):
             if info.get("status") != "t"
         }
     except Exception as e:
-        log_func(f"读取失败: {e}")
+        log_func(f"❗ 读取失败: {e}")
         return {}
 
 def clear_json():

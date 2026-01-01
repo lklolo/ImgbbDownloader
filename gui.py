@@ -57,7 +57,7 @@ class ImgbbDownloaderApp(QWidget):
         input_layout = QVBoxLayout(input_frame)
         input_layout.setContentsMargins(12, 12, 12, 12)
 
-        input_label = QLabel("请输入链接")
+        input_label = QLabel("请输入相册内嵌入代码（仅支持无密码相册），或相册链接")
         input_layout.addWidget(input_label)
 
         self.link_input = QTextEdit()
@@ -65,13 +65,19 @@ class ImgbbDownloaderApp(QWidget):
         self.link_input.setStyleSheet("background-color: #2b2b2b; color: #ffffff; border:1px solid #555555; border-radius:5px;")
         input_layout.addWidget(self.link_input)
         main_layout.addWidget(input_frame)
-
+        self.password_input = QTextEdit()
+        
+        self.password_input.setPlaceholderText("相册密码（可选）")
+        self.password_input.setFixedHeight(40)
+        input_layout.addWidget(self.password_input)
+        
+        
         log_frame = QFrame()
         log_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
         log_layout = QVBoxLayout(log_frame)
         log_layout.setContentsMargins(12, 12, 12, 12)
 
-        log_label = QLabel("日志 / 状态")
+        log_label = QLabel("日志")
         log_layout.addWidget(log_label)
 
         self.log_output = QTextEdit()
@@ -82,7 +88,7 @@ class ImgbbDownloaderApp(QWidget):
 
         self.file_table = QTableWidget()
         self.file_table.setColumnCount(2)
-        self.file_table.setHorizontalHeaderLabels(["文件名 / 链接", "状态"])
+        self.file_table.setHorizontalHeaderLabels(["文件", "状态"])
         self.file_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.file_table.setStyleSheet("""
             QTableWidget { background-color: #2b2b2b; color: #ffffff; gridline-color:#555555; }
@@ -148,7 +154,10 @@ class ImgbbDownloaderApp(QWidget):
 
     def extract_links(self):
         input_text = self.link_input.toPlainText()
-        links = re.findall(r'https://ibb\.co/[a-zA-Z0-9]+', input_text)
+        links = re.findall(
+            r'https://ibb\.co/(?:album/[A-Za-z0-9]+|[A-Za-z0-9]+)',
+            input_text
+        )
         return list(set(links))
 
     def start_new_task(self):
@@ -160,14 +169,21 @@ class ImgbbDownloaderApp(QWidget):
             return
 
         json_editor.clear_json()
-        self.log(f"检测到 {len(links)} 个链接，正在清空状态并开始下载...")
+        self.log(f"✔ 检测到 {len(links)} 个链接，正在清空状态并准备下载...")
 
         self.file_table.setRowCount(0)
 
         def worker():
             try:
-                get_download_links.process_download_links_until_success(links, log_func=self.log)
-                self.log("原图链接获取成功，开始下载...")
+                password = self.password_input.toPlainText().strip() or None
+
+                get_download_links.process_download_links_until_success(
+                    links,
+                    album_password=password,
+                    log_func=self.log
+                )
+                
+                self.log("✔ 原图获取成功，开始下载...")
 
                 url_map = json_editor.get_failed_map(log_func=self.log)
                 self.total_files = len(url_map)
@@ -182,9 +198,9 @@ class ImgbbDownloaderApp(QWidget):
                     log_func=self.log,
                     progress_callback=self.update_progress_signal
                 )
-                self.log("下载完成！")
+                self.log("🎉 下载完成！")
             except Exception as e:
-                self.log(f"发生错误：{e}")
+                self.log(f"❗ 发生错误：{e}")
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -196,7 +212,7 @@ class ImgbbDownloaderApp(QWidget):
             QMessageBox.information(self, "提示", "未找到上次下载任务")
             return
 
-        self.log("恢复上次下载任务...")
+        self.log("🔁 恢复上次下载任务...")
 
         url_map = json_editor.get_failed_map(log_func=self.log)
         self.total_files = len(url_map)
@@ -214,9 +230,9 @@ class ImgbbDownloaderApp(QWidget):
                     log_func=self.log,
                     progress_callback=self.update_progress_signal
                 )
-                self.log("下载完成！")
+                self.log("🎉 下载完成！")
             except Exception as e:
-                self.log(f"发生错误：{e}")
+                self.log(f"❗ 发生错误：{e}")
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -224,7 +240,7 @@ class ImgbbDownloaderApp(QWidget):
         from app_state import shutdown_event, pause_event
         pause_event.set()
         shutdown_event.set()
-        self.log("正在安全退出程序...")
+        self.log("📴 正在安全退出程序...")
         event.accept()
 
     def toggle_pause(self):
@@ -233,11 +249,11 @@ class ImgbbDownloaderApp(QWidget):
         if pause_event.is_set():
             pause_event.clear()
             self.pause_btn.setText("继续")
-            self.log("⏸ 下载已暂停")
+            self.log("⏸️ 下载已暂停")
         else:
             pause_event.set()
             self.pause_btn.setText("暂停")
-            self.log("▶ 下载已继续")
+            self.log("▶️ 下载已继续")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

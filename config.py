@@ -22,14 +22,13 @@ def load_config(log_func=print):
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             config = yaml.safe_load(f)
             if not isinstance(config, dict):
-                raise ValueError("配置格式错误：应为字典类型")
+                raise ValueError("❗ 配置格式错误：应为字典类型")
             return merge_with_default(config, default_config)
     except (yaml.YAMLError, ValueError) as e:
-        log_func(f"配置文件读取失败：{e}")
+        log_func(f"❗ 配置文件读取失败：{e}")
         backup_path = CONFIG_FILE + ".bak"
         os.rename(CONFIG_FILE, backup_path)
-        log_func(f"已将损坏的配置重命名为：{backup_path}")
-        log_func("正在恢复默认配置...")
+        log_func(f"🔁 正在恢复默认配置...已将损坏的配置重命名为：{backup_path}")
         write_config(default_config)
         return default_config
 
