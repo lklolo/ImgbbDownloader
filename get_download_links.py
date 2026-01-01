@@ -1,6 +1,5 @@
 import re
 import requests
-from lxml.etree import HTML
 
 import json_editor
 
