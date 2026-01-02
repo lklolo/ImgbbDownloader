@@ -284,33 +284,40 @@ class ImgbbDownloaderApp(QWidget):
             pause_event.set()
             self.pause_btn.setText("暂停")
             self.log("▶️ 下载已继续")
-            
+
     def choose_download_dir(self):
+        from PyQt6.QtWidgets import QFileDialog
+        from config import write_config
+        import app_state
+        import task_status
+    
         dir_path = QFileDialog.getExistingDirectory(
             self,
             "选择下载目录",
             self.config.get("download_dir", os.getcwd())
         )
-
+    
         if not dir_path:
             return
+    
+        os.makedirs(dir_path, exist_ok=True)
 
         self.config["download_dir"] = dir_path
-        
-        from config import write_config
         write_config(self.config)
 
-        import app_state
         app_state.download_dir = dir_path
+        task_status.reset_all_to_pending(log_func=self.log)
         self.download_dir_label.setText(dir_path)
-        self.log(f"📁 下载目录已设置为：{dir_path}")
+    
+        self.log(f"📁 下载目录已切换为：{dir_path}")
 
     def reset_download_dir(self):
         from config import write_config, default_config
         import app_state
+        import task_status
     
         default_dir = default_config["download_dir"]
-
+    
         reply = QMessageBox.question(
             self,
             "恢复默认设置",
@@ -320,14 +327,17 @@ class ImgbbDownloaderApp(QWidget):
     
         if reply != QMessageBox.StandardButton.Yes:
             return
-
+    
         os.makedirs(default_dir, exist_ok=True)
-
+    
         self.config["download_dir"] = default_dir
         write_config(self.config)
+    
         app_state.download_dir = default_dir
+        task_status.reset_all_to_pending(log_func=self.log)
+    
         self.download_dir_label.setText(default_dir)
-        self.log("🔄 下载目录已恢复为默认设置")
+        self.log("🔄 下载目录已恢复为默认")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

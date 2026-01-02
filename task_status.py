@@ -100,6 +100,33 @@ def get_failed_map(log_func=print):
         log_func(f"❗ 读取失败: {e}")
         return {}
 
+def reset_all_to_pending(log_func=print):
+    if not os.path.exists(task_status_file):
+        return
+
+    with _lock:
+        try:
+            with open(task_status_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            updated = False
+            now = int(time.time())
+
+            for url, info in data.items():
+                info["status"] = "f"
+                info["downloaded"] = 0
+                info["total"] = None
+                info["error"] = None
+                info["updated_at"] = now
+                updated = True
+
+            if updated:
+                save_data(data)
+                log_func("🔄 已重置下载状态")
+
+        except Exception as e:
+            log_func(f"❗ 重置下载状态失败：{e}")
+
 def clear_json():
     with _lock:
         save_data({})
