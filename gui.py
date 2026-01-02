@@ -18,7 +18,8 @@ class Logger(QObject):
     log_signal = pyqtSignal(str)
     progress_signal = pyqtSignal(int)
     max_progress_signal = pyqtSignal(int)
-    file_status_signal = pyqtSignal(str, str)  # file_name, status
+    file_status_signal = pyqtSignal(str, str)
+    add_file_signal = pyqtSignal(str, str)# file_name, status
 
 logger = Logger()
 
@@ -126,6 +127,9 @@ class ImgbbDownloaderApp(QWidget):
             QHeaderView::section { background-color:#3c3f41; color:#ffffff; }
         """)
         self.file_table.horizontalHeader().setStretchLastSection(True)
+        self.file_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.file_table.setAlternatingRowColors(True)
+        
         main_layout.addWidget(self.file_table)
 
         self.progress_bar = QProgressBar()
@@ -141,7 +145,7 @@ class ImgbbDownloaderApp(QWidget):
         self.start_btn = QPushButton("开始新任务")
         self.start_btn.clicked.connect(self.start_new_task)
         btn_layout.addWidget(self.start_btn)
-        self.resume_btn = QPushButton("继续上次下载")
+        self.resume_btn = QPushButton("恢复上次的下载")
         self.resume_btn.clicked.connect(self.resume_last_task)
         btn_layout.addWidget(self.resume_btn)
         main_layout.addLayout(btn_layout)
@@ -220,8 +224,9 @@ class ImgbbDownloaderApp(QWidget):
                 self.completed_files = 0
                 logger.max_progress_signal.emit(self.total_files)
 
+                logger.add_file_signal.connect(self.add_file_to_table)
                 for file_name in url_map.values():
-                    self.add_file_to_table(file_name, "未下载")
+                    logger.add_file_signal.emit(file_name, "未下载")
 
                 download.download_files_concurrently(
                     url_map,
@@ -268,11 +273,11 @@ class ImgbbDownloaderApp(QWidget):
 
     def closeEvent(self, event):
         from app_state import shutdown_event, pause_event
+        self.log("📴 正在安全退出程序...")
         pause_event.set()
         shutdown_event.set()
-        self.log("📴 正在安全退出程序...")
         event.accept()
-
+    
     def toggle_pause(self):
         from app_state import pause_event
 
