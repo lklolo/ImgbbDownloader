@@ -1,7 +1,7 @@
 import re
 import requests
 
-import json_editor
+import task_status
 
 def album_need_password(html: str) -> bool:
     return 'name="content-password"' in html
@@ -87,7 +87,7 @@ def process_download_links_until_success(
         try:
             if "/album/" not in link:
                 img_url = extract_original_image_url(session, link)
-                json_editor.add_link(img_url)
+                task_status.add_link(img_url)
                 continue
 
             log_func(f"📁 解析相册：{link}")
@@ -115,7 +115,7 @@ def process_download_links_until_success(
 
             for page_url in pages:
                 img_url = extract_original_image_url(session, page_url)
-                json_editor.add_link(img_url)
+                task_status.add_link(img_url)
 
         except Exception as e:
             log_func(f"❗ 解析失败 {link} → {e}")

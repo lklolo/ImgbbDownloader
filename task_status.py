@@ -4,7 +4,7 @@ import time
 import threading
 from urllib.parse import urlparse
 
-from app_state import json_file
+from app_state import task_status_file
 
 _lock = threading.Lock()
 
@@ -13,13 +13,13 @@ def extract_filename(url):
     return os.path.basename(path)
 
 def load_data():
-    if os.path.exists(json_file):
-        with open(json_file, "r", encoding="utf-8") as f:
+    if os.path.exists(task_status_file):
+        with open(task_status_file, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
 def save_data(data):
-    with open(json_file, "w", encoding="utf-8") as f:
+    with open(task_status_file, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
         
 def add_link(url):
@@ -59,10 +59,10 @@ def update_progress(url, downloaded, total=None):
         save_data(data)
 
 def rename_duplicates():
-    if not os.path.exists(json_file):
+    if not os.path.exists(task_status_file):
         return
     with _lock:
-        with open(json_file, "r", encoding="utf-8") as f:
+        with open(task_status_file, "r", encoding="utf-8") as f:
             data = json.load(f)
         filename_count = {}
         updated = False
@@ -87,9 +87,9 @@ def rename_duplicates():
 def get_failed_map(log_func=print):
     try:
         rename_duplicates()
-        if not os.path.exists(json_file):
+        if not os.path.exists(task_status_file):
             return {}
-        with open(json_file, "r", encoding="utf-8") as f:
+        with open(task_status_file, "r", encoding="utf-8") as f:
             data = json.load(f)
         return {
             url: info["filename"]

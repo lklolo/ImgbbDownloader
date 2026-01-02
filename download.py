@@ -3,11 +3,11 @@ import time
 import requests
 from concurrent.futures import ThreadPoolExecutor, CancelledError
 
-import json_editor
-from app_state import DOWNLOAD_DIR, headers
+import task_status
+from app_state import download_dir, headers
 from app_state import shutdown_event, pause_event
 
-os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+os.makedirs(download_dir, exist_ok=True)
 
 def check_file_complete_by_head(url, file_path, timeout=10):
     if not os.path.exists(file_path):
@@ -57,17 +57,17 @@ def download_file(download_url, file_name, log_func=print,
     if shutdown_event.is_set():
         return None
 
-    file_path = os.path.join(DOWNLOAD_DIR, file_name)
+    file_path = os.path.join(download_dir, file_name)
 
     head_ok = check_file_complete_by_head(download_url, file_path)
     if head_ok is True:
-        json_editor.update_status(download_url, "t")
+        task_status.update_status(download_url, "t")
         log_func(f"[跳过] {file_name} 已完整（HEAD）")
         if progress_callback:
             progress_callback(file_index, total_files, file_name, "已完成")
         return None
 
-    data = json_editor.load_data().get(download_url, {})
+    data = task_status.load_data().get(download_url, {})
     downloaded = data.get("downloaded", 0)
 
     if os.path.exists(file_path):
@@ -114,13 +114,13 @@ def download_file(download_url, file_name, log_func=print,
                             f.write(chunk)
                             downloaded += len(chunk)
 
-                            json_editor.update_progress(
+                            task_status.update_progress(
                                 download_url,
                                 downloaded,
                                 total
                             )
 
-            json_editor.update_status(download_url, "t")
+            task_status.update_status(download_url, "t")
             log_func(f"[完成] {file_name}")
             if progress_callback:
                 progress_callback(file_index, total_files, file_name, "已完成")
@@ -136,11 +136,11 @@ def download_file(download_url, file_name, log_func=print,
                     os.remove(file_path)
 
                 downloaded = 0
-                json_editor.update_progress(download_url, 0, None)
+                task_status.update_progress(download_url, 0, None)
                 continue
 
             wait = 2 ** (attempt - 1)
-            json_editor.update_status(download_url, "f", str(e))
+            task_status.update_status(download_url, "f", str(e))
             log_func(
                 f"[重试 {attempt}/{retries}] {file_name} 失败: {e}，{wait}s 后重试"
             )
@@ -149,7 +149,7 @@ def download_file(download_url, file_name, log_func=print,
         except Exception as e:
             attempt += 1
             wait = 2 ** (attempt - 1)
-            json_editor.update_status(download_url, "f", str(e))
+            task_status.update_status(download_url, "f", str(e))
             log_func(
                 f"[重试 {attempt}/{retries}] {file_name} 失败: {e}，{wait}s 后重试"
             )

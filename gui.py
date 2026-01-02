@@ -4,15 +4,15 @@ import re
 import threading
 
 from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import Qt, pyqtSignal, QObject
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QTextEdit, QPushButton, QMessageBox, QFrame, QProgressBar,
-    QTableWidget, QTableWidgetItem, QAbstractItemView
+    QTableWidget, QTableWidgetItem, QAbstractItemView,QFileDialog
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QObject
 
-from config import load_config
 import app_state
+from config import load_config
 
 class Logger(QObject):
     log_signal = pyqtSignal(str)
@@ -33,8 +33,8 @@ class ImgbbDownloaderApp(QWidget):
         """)
 
         self.config = load_config(log_func=self.log)
-        app_state.DOWNLOAD_DIR = self.config["download_directory"]
-        app_state.json_file = self.config["task_status"]
+        app_state.download_dir = self.config["download_dir"]
+        app_state.task_status_file = self.config["task_status_file"]
         app_state.headers = self.config["headers"]
 
         self.completed_files = 0
@@ -51,6 +51,37 @@ class ImgbbDownloaderApp(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(15, 15, 15, 15)
         main_layout.setSpacing(10)
+
+        settings_frame = QFrame()
+        settings_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
+        settings_layout = QVBoxLayout(settings_frame)
+        settings_layout.setContentsMargins(12, 12, 12, 12)
+        settings_layout.setSpacing(8)
+
+        dir_layout = QHBoxLayout()
+        dir_label = QLabel("下载目录：")
+        dir_layout.addWidget(dir_label)
+        
+        reset_layout = QHBoxLayout()
+        reset_layout.addStretch()
+        self.reset_dir_btn = QPushButton("恢复默认")
+        self.reset_dir_btn.setToolTip("恢复默认下载目录")
+        self.reset_dir_btn.clicked.connect(self.reset_download_dir)
+        reset_layout.addWidget(self.reset_dir_btn)
+        settings_layout.addLayout(reset_layout)
+        
+        
+        self.download_dir_label = QLabel(self.config["download_dir"])
+        self.download_dir_label.setStyleSheet(
+            "color:#a9b7c6; border:1px solid #555; padding:4px; border-radius:4px;")
+        self.download_dir_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse)
+        dir_layout.addWidget(self.download_dir_label, stretch=1)
+        self.choose_dir_btn = QPushButton("选择目录")
+        self.choose_dir_btn.clicked.connect(self.choose_download_dir)
+        dir_layout.addWidget(self.choose_dir_btn)
+        settings_layout.addLayout(dir_layout)
+        main_layout.addWidget(settings_frame)
 
         input_frame = QFrame()
         input_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
@@ -71,7 +102,6 @@ class ImgbbDownloaderApp(QWidget):
         self.password_input.setPlaceholderText("相册密码（可选）")
         self.password_input.setFixedHeight(40)
         input_layout.addWidget(self.password_input)
-        
         
         log_frame = QFrame()
         log_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
@@ -162,14 +192,13 @@ class ImgbbDownloaderApp(QWidget):
         return list(set(links))
 
     def start_new_task(self):
-        import json_editor, download, get_download_links
-
+        import task_status, download, get_download_links
         links = self.extract_links()
         if not links:
             QMessageBox.warning(self, "提示", "没有检测到任何有效链接")
             return
 
-        json_editor.clear_json()
+        task_status.clear_json()
         self.log(f"✔ 检测到 {len(links)} 个链接，正在清空状态并准备下载...")
 
         self.file_table.setRowCount(0)
@@ -186,7 +215,7 @@ class ImgbbDownloaderApp(QWidget):
                 
                 self.log("✔ 原图获取成功，开始下载...")
 
-                url_map = json_editor.get_failed_map(log_func=self.log)
+                url_map = task_status.get_failed_map(log_func=self.log)
                 self.total_files = len(url_map)
                 self.completed_files = 0
                 logger.max_progress_signal.emit(self.total_files)
@@ -206,16 +235,16 @@ class ImgbbDownloaderApp(QWidget):
         threading.Thread(target=worker, daemon=True).start()
 
     def resume_last_task(self):
-        from app_state import json_file
-        import download, json_editor
+        from app_state import task_status_file
+        import download, task_status
 
-        if not os.path.exists(json_file) or os.path.getsize(json_file) == 0:
+        if not os.path.exists(task_status_file) or os.path.getsize(task_status_file) == 0:
             QMessageBox.information(self, "提示", "未找到上次下载任务")
             return
 
         self.log("🔁 恢复上次下载任务...")
 
-        url_map = json_editor.get_failed_map(log_func=self.log)
+        url_map = task_status.get_failed_map(log_func=self.log)
         self.total_files = len(url_map)
         self.completed_files = 0
         logger.max_progress_signal.emit(self.total_files)
@@ -255,6 +284,50 @@ class ImgbbDownloaderApp(QWidget):
             pause_event.set()
             self.pause_btn.setText("暂停")
             self.log("▶️ 下载已继续")
+            
+    def choose_download_dir(self):
+        dir_path = QFileDialog.getExistingDirectory(
+            self,
+            "选择下载目录",
+            self.config.get("download_dir", os.getcwd())
+        )
+
+        if not dir_path:
+            return
+
+        self.config["download_dir"] = dir_path
+        
+        from config import write_config
+        write_config(self.config)
+
+        import app_state
+        app_state.download_dir = dir_path
+        self.download_dir_label.setText(dir_path)
+        self.log(f"📁 下载目录已设置为：{dir_path}")
+
+    def reset_download_dir(self):
+        from config import write_config, default_config
+        import app_state
+    
+        default_dir = default_config["download_dir"]
+
+        reply = QMessageBox.question(
+            self,
+            "恢复默认设置",
+            f"确定要将下载目录恢复为默认值吗？\n\n{default_dir}",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+    
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        os.makedirs(default_dir, exist_ok=True)
+
+        self.config["download_dir"] = default_dir
+        write_config(self.config)
+        app_state.download_dir = default_dir
+        self.download_dir_label.setText(default_dir)
+        self.log("🔄 下载目录已恢复为默认设置")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
