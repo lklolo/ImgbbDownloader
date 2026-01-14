@@ -26,7 +26,7 @@ logger = Logger()
 class ImgbbDownloaderApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Imgbb 批量原图下载器")
+        self.setWindowTitle("Imgbb下载器")
         self.resize(700, 1000)
         self.setWindowIcon(QIcon("icon.ico"))
         self.setStyleSheet("""
