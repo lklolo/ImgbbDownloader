@@ -1,0 +1,30 @@
+[tool.nuitka]
+main = "gui.py"
+
+# 构建模式
+standalone = true
+onefile = false
+
+# Qt / GUI
+windows-disable-console = true
+enable-plugin = ["pyqt6"]
+include-qt-plugins = [
+    "platforms"
+]
+
+# 资源
+windows-icon-from-ico = "icon.ico"
+include-data-file = [
+    "icon.ico=icon.ico"
+]
+
+# 输出
+output-dir = "dist_nuitka"
+
+# 版本信息
+company-name = "LucKShark"
+product-name = "Imgbb Downloader"
+file-description = "Imgbb下载器"
+file-version = "1.2.1"
+product-version = "1.2.1"
+copyright = "Copyright © 2026 LucKShark/LKLOLO"
