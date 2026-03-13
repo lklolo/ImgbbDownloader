@@ -3,18 +3,8 @@ import requests
 
 import task_status
 
-
-# =========================
-# 工具函数
-# =========================
-
 def album_need_password(html: str) -> bool:
     return 'name="content-password"' in html
-
-
-# =========================
-# 相册解锁
-# =========================
 
 def unlock_album(session: requests.Session, album_url: str, password: str):
     r = session.get(album_url, timeout=10)
@@ -49,11 +39,6 @@ def unlock_album(session: requests.Session, album_url: str, password: str):
         return False, "相册密码错误"
 
     return True, "相册解锁成功"
-
-
-# =========================
-# 提取相册中的图片页面链接
-# =========================
 
 def extract_image_pages(
         session: requests.Session,
@@ -90,11 +75,6 @@ def extract_image_pages(
 
     return image_pages
 
-
-# =========================
-# 提取图片原图链接
-# =========================
-
 def extract_original_image_url(
         session: requests.Session,
         image_page_url: str,
@@ -118,11 +98,6 @@ def extract_original_image_url(
 
     return img_url
 
-
-# =========================
-# 主入口：处理所有链接
-# =========================
-
 def process_download_links_until_success(
         links,
         log_func=print,
@@ -141,9 +116,6 @@ def process_download_links_until_success(
 
     for link in links:
         try:
-            # =====================
-            # 单图页面
-            # =====================
             if "/album/" not in link:
                 log_func(f"🖼️ 解析单张图片：{link}")
 
@@ -155,9 +127,6 @@ def process_download_links_until_success(
                 task_status.add_link(img_url)
                 continue
 
-            # =====================
-            # 相册页面
-            # =====================
             log_func(f"📁 解析相册：{link}")
 
             r = session.get(link, timeout=10)
@@ -180,7 +149,6 @@ def process_download_links_until_success(
             else:
                 log_func("🔓 相册无需解锁")
 
-            # 二次确认
             if album_need_password(session.get(link).text):
                 raise RuntimeError("相册仍处于锁定状态")
 
