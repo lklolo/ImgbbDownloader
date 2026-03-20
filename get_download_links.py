@@ -1,5 +1,8 @@
 import re
 import requests
+from lxml import html as lxml_html
+import time
+import random
 
 import task_status
 
@@ -12,7 +15,7 @@ def unlock_album(session: requests.Session, album_url: str, password: str):
 
     token = re.search(r'name="auth_token" value="([^"]+)"', r.text)
     if not token:
-        return False, "未找到 auth_token"
+        return False,
 
     auth_token = token.group(1)
 
@@ -30,48 +33,67 @@ def unlock_album(session: requests.Session, album_url: str, password: str):
         allow_redirects=True
     )
     res.raise_for_status()
-
-    # ⭐ 二次 GET 验证是否真正解锁
     verify = session.get(album_url, timeout=10)
     verify.raise_for_status()
 
     if album_need_password(verify.text):
-        return False, "相册密码错误"
+        return False,
 
-    return True, "相册解锁成功"
+    return True,
 
 def extract_image_pages(
-        session: requests.Session,
-        album_url: str,
+        session,
+        album_url,
         log_func=print
 ):
     image_pages = []
-    page = 1
+
+    # --- 核心修复 1: 初始化 URL 并强制排序 ---
+    # ImgBB 在特定排序下分页更稳定，添加参数防止服务器返回乱序或缺失数据
+    if "?" not in album_url:
+        current_url = f"{album_url}?sort=name_asc&page=1"
+    else:
+        current_url = album_url
+
+    log_func(f"🚀 开始解析相册，初始地址: {current_url}")
 
     while True:
-        url = f"{album_url}?page={page}"
+        try:
+            r = session.get(current_url, timeout=10)
+            r.raise_for_status()
 
-        r = session.get(url, timeout=10)
-        r.raise_for_status()
+            # --- 核心修复 2: 提取当前页链接并去重 ---
+            # ImgBB 页面内通常一个图片对应两个 <a> 标签，findall 会翻倍
+            found_on_page = re.findall(r"https://ibb\.co/[a-zA-Z0-9]{7,8}", r.text)
 
-        html = r.text
+            # 使用 dict.fromkeys 在保持顺序的同时去重
+            new_links_on_page = list(dict.fromkeys(found_on_page))
 
-        links = re.findall(
-            r"https://ibb\.co/[a-zA-Z0-9]{7,8}",
-            html
-        )
-        links = list(dict.fromkeys(links))
+            count_before = len(image_pages)
+            for link in new_links_on_page:
+                if link not in image_pages:
+                    image_pages.append(link)
 
-        if not links:
+            added_count = len(image_pages) - count_before
+            log_func(f"📑 当前页新增 {added_count} 张图片，累计已抓取 {len(image_pages)} 张")
+
+            # --- 核心修复 3: 寻找“下一页”的真实链接 ---
+            # 不再手动拼接 page+1，而是直接找页面上的“Next”按钮
+            tree = lxml_html.fromstring(r.text)
+            # XPath 定位：寻找包含 'pagination-next' 类的 li 标签下的 a 链接
+            next_href = tree.xpath('//li[contains(@class, "pagination-next")]/a/@href')
+
+            if next_href and next_href[0] != "#" and next_href[0] != current_url:
+                current_url = next_href[0]
+                # 适当延迟，防止被反爬虫拦截
+                time.sleep(random.uniform(0.5, 1.0))
+            else:
+                log_func("🏁 已到达相册末尾")
+                break
+
+        except Exception as e:
+            log_func(f"❗ 分页解析中断：{e}")
             break
-
-        new_links = [l for l in links if l not in image_pages]
-        if not new_links:
-            break
-
-        image_pages.extend(new_links)
-
-        page += 1
 
     return image_pages
 
@@ -117,8 +139,6 @@ def process_download_links_until_success(
     for link in links:
         try:
             if "/album/" not in link:
-                log_func(f"🖼️ 解析单张图片：{link}")
-
                 img_url = extract_original_image_url(
                     session,
                     link,
@@ -146,8 +166,6 @@ def process_download_links_until_success(
                     raise RuntimeError(msg)
 
                 log_func("🔓 相册解锁成功")
-            else:
-                log_func("🔓 相册无需解锁")
 
             if album_need_password(session.get(link).text):
                 raise RuntimeError("相册仍处于锁定状态")
