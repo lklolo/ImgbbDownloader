@@ -2,6 +2,7 @@ import sys
 import os
 import re
 import threading
+import ctypes
 
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt, pyqtSignal, QObject
@@ -13,6 +14,10 @@ from PyQt6.QtWidgets import (
 
 import app_state
 from config import load_config
+
+def get_resource_path(relative_path):
+    base_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    return os.path.join(base_path, relative_path)
 
 class Logger(QObject):
     log_signal = pyqtSignal(str)
@@ -28,7 +33,9 @@ class ImgbbDownloaderApp(QWidget):
         super().__init__()
         self.setWindowTitle("Imgbb下载器")
         self.resize(700, 1000)
-        self.setWindowIcon(QIcon("icon.ico"))
+        icon_path = get_resource_path("icon.ico")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
         self.setStyleSheet("""
             QWidget { background-color: #2b2b2b; color: #ffffff; font-family: Arial; }
         """)
@@ -346,6 +353,11 @@ class ImgbbDownloaderApp(QWidget):
         self.log("🔄 下载目录已恢复为默认")
 
 if __name__ == "__main__":
+    try:
+        myappid = 'luckshark.imgbbdownloader'
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    except Exception:
+        pass
     app = QApplication(sys.argv)
     window = ImgbbDownloaderApp()
     window.show()
