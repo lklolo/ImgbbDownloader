@@ -48,25 +48,18 @@ def extract_image_pages(
 ):
     image_pages = []
 
-    # --- 核心修复 1: 初始化 URL 并强制排序 ---
-    # ImgBB 在特定排序下分页更稳定，添加参数防止服务器返回乱序或缺失数据
     if "?" not in album_url:
         current_url = f"{album_url}?sort=name_asc&page=1"
     else:
         current_url = album_url
-
-    log_func(f"🚀 开始解析相册，初始地址: {current_url}")
 
     while True:
         try:
             r = session.get(current_url, timeout=10)
             r.raise_for_status()
 
-            # --- 核心修复 2: 提取当前页链接并去重 ---
-            # ImgBB 页面内通常一个图片对应两个 <a> 标签，findall 会翻倍
             found_on_page = re.findall(r"https://ibb\.co/[a-zA-Z0-9]{7,8}", r.text)
 
-            # 使用 dict.fromkeys 在保持顺序的同时去重
             new_links_on_page = list(dict.fromkeys(found_on_page))
 
             count_before = len(image_pages)
@@ -75,20 +68,14 @@ def extract_image_pages(
                     image_pages.append(link)
 
             added_count = len(image_pages) - count_before
-            log_func(f"📑 当前页新增 {added_count} 张图片，累计已抓取 {len(image_pages)} 张")
 
-            # --- 核心修复 3: 寻找“下一页”的真实链接 ---
-            # 不再手动拼接 page+1，而是直接找页面上的“Next”按钮
             tree = lxml_html.fromstring(r.text)
-            # XPath 定位：寻找包含 'pagination-next' 类的 li 标签下的 a 链接
             next_href = tree.xpath('//li[contains(@class, "pagination-next")]/a/@href')
 
             if next_href and next_href[0] != "#" and next_href[0] != current_url:
                 current_url = next_href[0]
-                # 适当延迟，防止被反爬虫拦截
                 time.sleep(random.uniform(0.5, 1.0))
             else:
-                log_func("🏁 已到达相册末尾")
                 break
 
         except Exception as e:
