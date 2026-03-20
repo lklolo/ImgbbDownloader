@@ -47,6 +47,7 @@ class ImgbbDownloaderApp(QWidget):
         logger.progress_signal.connect(self._update_progress)
         logger.max_progress_signal.connect(self._set_progress_max)
         logger.file_status_signal.connect(self._update_file_status)
+        logger.add_file_signal.connect(self.add_file_to_table)
 
     def init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -224,7 +225,7 @@ class ImgbbDownloaderApp(QWidget):
                 self.completed_files = 0
                 logger.max_progress_signal.emit(self.total_files)
 
-                logger.add_file_signal.connect(self.add_file_to_table)
+                
                 for file_name in url_map.values():
                     logger.add_file_signal.emit(file_name, "未下载")
 
