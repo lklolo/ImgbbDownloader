@@ -4,13 +4,14 @@ import re
 import threading
 import ctypes
 
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal, QObject
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QTextEdit, QPushButton, QMessageBox, QFrame, QProgressBar,
     QTableWidget, QTableWidgetItem, QAbstractItemView,QFileDialog
 )
+from PyQt6.QtWidgets import QScrollArea, QGridLayout
 
 import app_state
 from config import load_config
@@ -24,7 +25,8 @@ class Logger(QObject):
     progress_signal = pyqtSignal(int)
     max_progress_signal = pyqtSignal(int)
     file_status_signal = pyqtSignal(str, str)
-    add_file_signal = pyqtSignal(str, str)# file_name, status
+    add_file_signal = pyqtSignal(str, str)
+    preview_signal = pyqtSignal(str)
 
 logger = Logger()
 
@@ -137,7 +139,6 @@ class ImgbbDownloaderApp(QWidget):
         self.file_table.horizontalHeader().setStretchLastSection(True)
         self.file_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.file_table.setAlternatingRowColors(True)
-        
         main_layout.addWidget(self.file_table)
 
         self.progress_bar = QProgressBar()
@@ -160,6 +161,30 @@ class ImgbbDownloaderApp(QWidget):
         self.pause_btn = QPushButton("暂停")
         self.pause_btn.clicked.connect(self.toggle_pause)
         btn_layout.addWidget(self.pause_btn)
+
+        # --- 预览区 (替换或放在 file_table 之后) ---
+        preview_frame = QFrame()
+        preview_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
+        preview_layout = QVBoxLayout(preview_frame)
+        preview_layout.addWidget(QLabel("实时预览"))
+
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setStyleSheet("border: none; background-color: #2b2b2b;")
+
+        self.preview_container = QWidget()
+        self.preview_grid = QGridLayout(self.preview_container)
+        self.preview_grid.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.scroll_area.setWidget(self.preview_container)
+
+        preview_layout.addWidget(self.scroll_area)
+        main_layout.addWidget(preview_frame, stretch=2) # 预览区可以占更多空间
+
+        # 记录当前预览图的数量，用于计算网格位置
+        self.preview_count = 0
+
+        # 绑定信号
+        logger.preview_signal.connect(self._add_preview_card)
 
     def log(self, msg: str):
         logger.log_signal.emit(msg)
@@ -188,10 +213,17 @@ class ImgbbDownloaderApp(QWidget):
                 break
 
     def update_progress_signal(self, file_index, total_files, file_name, status):
-
         logger.file_status_signal.emit(file_name, status)
 
-        if status in ["已完成", "失败"]:
+        if status == "已完成":
+            self.completed_files += 1
+            logger.progress_signal.emit(self.completed_files)
+
+            # 新增：构造完整路径并通知 UI 显示预览
+            full_path = os.path.join(app_state.download_dir, file_name)
+            logger.preview_signal.emit(full_path)
+
+        elif status == "失败":
             self.completed_files += 1
             logger.progress_signal.emit(self.completed_files)
 
@@ -202,6 +234,37 @@ class ImgbbDownloaderApp(QWidget):
             input_text
         )
         return list(set(links))
+
+    def _add_preview_card(self, file_path):
+        """动态添加缩略图卡片"""
+        if not os.path.exists(file_path):
+            return
+
+        card = QWidget()
+        card_layout = QVBoxLayout(card)
+
+        img_label = QLabel()
+        img_label.setFixedSize(120, 120)
+        img_label.setScaledContents(True)
+        img_label.setStyleSheet("border-radius: 5px; background-color: #444;")
+
+        pixmap = QPixmap(file_path)
+        if not pixmap.isNull():
+            img_label.setPixmap(pixmap.scaled(120, 120, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
+
+        name_label = QLabel(os.path.basename(file_path))
+        name_label.setFixedWidth(120)
+        name_label.setStyleSheet("font-size: 10px; color: #a9b7c6;")
+        name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        card_layout.addWidget(img_label)
+        card_layout.addWidget(name_label)
+
+        # 计算网格位置（每行 4 个）
+        row = self.preview_count // 4
+        col = self.preview_count % 4
+        self.preview_grid.addWidget(card, row, col)
+        self.preview_count += 1
 
     def start_new_task(self):
         import task_status, download, get_download_links
@@ -214,6 +277,17 @@ class ImgbbDownloaderApp(QWidget):
         self.log(f"✔ 检测到 {len(links)} 个链接，正在清空状态并准备下载...")
 
         self.file_table.setRowCount(0)
+
+        # --- 新增：重置 UI 状态 ---
+        self.file_table.setRowCount(0)
+        self.preview_count = 0
+        # 清除预览网格中的所有组件
+        while self.preview_grid.count():
+            item = self.preview_grid.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+        # -----------------------
 
         def worker():
             try:
