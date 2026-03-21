@@ -15,7 +15,7 @@ def unlock_album(session: requests.Session, album_url: str, password: str):
 
     token = re.search(r'name="auth_token" value="([^"]+)"', r.text)
     if not token:
-        return False,
+        return False, "未能获取到 auth_token"
 
     auth_token = token.group(1)
 
@@ -33,13 +33,14 @@ def unlock_album(session: requests.Session, album_url: str, password: str):
         allow_redirects=True
     )
     res.raise_for_status()
+
     verify = session.get(album_url, timeout=10)
     verify.raise_for_status()
 
     if album_need_password(verify.text):
-        return False,
+        return False, "密码错误或解锁失败"
 
-    return True,
+    return True, "解锁成功"
 
 def extract_image_pages(
         session,
