@@ -8,6 +8,9 @@
 ![Downloads](https://img.shields.io/github/downloads/lklolo/ImgbbDownloader/total)
 
 专为 ImgBB 打造的深度解析工具，彻底解决通用爬虫只能抓取缩略图的痛点。
+<p align="center">
+  <img src="README/logo.png" alt="ImgBB Downloader Logo" width="500">
+</p>
 
 ---
 
@@ -27,13 +30,13 @@
 ### 1. 获取链接
 复制 **相册链接** 或 **图片查看链接**（如下图红框所示）。支持批量粘贴。
 
-![获取链接示例](使用方法（图片）/2.png)
+![获取链接示例](README/2.png)
 
 ### 2. 建立任务
 将链接粘贴至软件上方的输入框，点击 **[开始新任务]**。
 * **注意：** 若相册设有访问密码，请务必在密码栏填入正确信息，否则无法解析。
 
-![操作界面示例](使用方法（图片）/1.png)
+![操作界面示例](README/1.png)
 
 ### 3. 异常处理
 * 解析过程中如遇 `Time Out`（超时）等网络波动提示，请尝试重试。
