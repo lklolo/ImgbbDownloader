@@ -16,7 +16,7 @@ import app_state
 from config import load_config
 
 def get_resource_path(relative_path):
-    base_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
 
 class Logger(QObject):
@@ -358,7 +358,12 @@ if __name__ == "__main__":
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
     except Exception:
         pass
+
     app = QApplication(sys.argv)
+    icon_path = get_resource_path("icon.ico")
+    if os.path.exists(icon_path):
+        app.setWindowIcon(QIcon(icon_path))
+
     window = ImgbbDownloaderApp()
     window.show()
     sys.exit(app.exec())
