@@ -179,3 +179,4 @@ def process_download_links_until_success(
 
         except Exception as e:
             log_func(f"❗ 解析失败 {link} → {e}")
+            return False
