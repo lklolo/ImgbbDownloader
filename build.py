@@ -5,7 +5,7 @@ import sys
 MAIN_SCRIPT = "gui.py"
 APP_NAME = "ImgbbDownloader"
 ICON_PATH = "icon.ico"
-VERSION = "1.2.2"
+VERSION = "1.2.4"
 COMPANY = "LucKShark"
 DESCRIPTION = "Imgbb 下载器"
 
