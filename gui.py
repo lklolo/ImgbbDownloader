@@ -147,7 +147,7 @@ logger = Logger()
 class ImgbbDownloaderApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Imgbb极简下载器 Pro")
+        self.setWindowTitle("Imgbb Downloader")
         self.resize(1000, 900)
         icon_path = get_resource_path("icon.ico")
         if os.path.exists(icon_path):
