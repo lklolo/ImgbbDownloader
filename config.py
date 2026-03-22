@@ -4,6 +4,7 @@ import yaml
 CONFIG_FILE = "config.yaml"
 default_config = {
     "download_dir": "downloads",
+    "background_path": "",
     "task_status_file": "task_status.json",
     "headers": {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",

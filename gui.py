@@ -7,21 +7,28 @@ import platform
 import subprocess
 from urllib.parse import urlparse
 
-from PyQt6.QtGui import QIcon, QPixmap, QMovie, QCursor
+from PyQt6.QtGui import QIcon, QPixmap, QMovie, QCursor, QPainter, QColor, QAction
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QSize
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QTextEdit, QPushButton, QMessageBox, QFrame, QProgressBar,
-    QFileDialog, QScrollArea, QGridLayout, QSizePolicy
+    QFileDialog, QScrollArea, QGridLayout, QSizePolicy, QMenu
 )
 
 import app_state
-from config import load_config
+from config import load_config, write_config
 
 
 def get_resource_path(relative_path):
     base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
+
+def load_stylesheet(file_path):
+    """工具函数：读取 QSS 文件内容"""
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
 
 class ImageStatusCard(QFrame):
     def __init__(self, file_name, parent=None):
@@ -33,29 +40,8 @@ class ImageStatusCard(QFrame):
         self.setFixedSize(160, 190)
         self.setToolTip(f"文件名: {self.file_name}\n状态: 等待解析...")
 
-        self.normal_style = """
-            ImageStatusCard {
-                background-color: #333;
-                border: 1px solid #444;
-                border-radius: 8px;
-            }
-            ImageStatusCard:hover {
-                border: 1px solid #777;
-                background-color: #383838;
-            }
-        """
-        self.completed_style = """
-            ImageStatusCard {
-                background-color: #333;
-                border: 1px solid #2e7d32;
-                border-radius: 8px;
-            }
-            ImageStatusCard:hover {
-                border: 1px solid #4caf50;
-                background-color: #383838;
-            }
-        """
-        self.setStyleSheet(self.normal_style)
+        # 初始状态属性
+        self.setProperty("completed", "false")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(5, 8, 5, 5)
@@ -64,7 +50,7 @@ class ImageStatusCard(QFrame):
         self.image_label = QLabel()
         self.image_label.setFixedSize(150, 125)
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_label.setStyleSheet("background-color: #222; border-radius: 4px; color: #555; font-size: 24px;")
+        self.image_label.setObjectName("CardImage")
         self.image_label.setText("⌛")
 
         layout.addWidget(self.image_label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -72,7 +58,7 @@ class ImageStatusCard(QFrame):
         self.name_label = QLabel()
         self.name_label.setFixedWidth(145)
         self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.name_label.setStyleSheet("color: #a9b7c6; font-size: 11px; background: transparent; border: none;")
+        self.name_label.setObjectName("CardName")
 
         metrics = self.name_label.fontMetrics()
         elided_name = metrics.elidedText(self.file_name, Qt.TextElideMode.ElideRight, 140)
@@ -82,7 +68,7 @@ class ImageStatusCard(QFrame):
 
         self.status_label = QLabel("待下载")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.status_label.setStyleSheet("color: #777; font-size: 10px; font-weight: bold; background: transparent; border: none;")
+        self.status_label.setObjectName("CardStatus")
         layout.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def set_image(self, file_path):
@@ -103,24 +89,29 @@ class ImageStatusCard(QFrame):
             self.image_label.setText("")
 
             self.is_completed = True
-            self.set_status("已完成", "#4caf50")
-            self.setStyleSheet(self.completed_style)
-            self.setToolTip(f"双击打开: {self.file_name}")
+            self.set_status("已完成")
 
+            # 切换 QSS 属性并刷新样式
+            self.setProperty("completed", "true")
+            self.style().unpolish(self)
+            self.style().polish(self)
+
+            self.setToolTip(f"双击打开: {self.file_name}")
             self.setCursor(Qt.CursorShape.PointingHandCursor)
         else:
             self.set_status("损坏图片", "#f44336")
 
-    def set_status(self, text, color="#777"):
+    def set_status(self, text, color=None):
         self.status_label.setText(text)
-        self.status_label.setStyleSheet(f"color: {color}; font-size: 10px; font-weight: bold; background: transparent; border: none;")
+        if color:
+            self.status_label.setStyleSheet(f"color: {color};")
+        else:
+            self.status_label.setStyleSheet("") # 恢复 QSS 默认
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             if self.is_completed and self.full_path and os.path.exists(self.full_path):
                 self._open_with_system_default(self.full_path)
-            else:
-                pass
 
     def _open_with_system_default(self, path):
         try:
@@ -149,25 +140,23 @@ class ImgbbDownloaderApp(QWidget):
         super().__init__()
         self.setWindowTitle("Imgbb Downloader")
         self.resize(1000, 900)
+
         icon_path = get_resource_path("icon.ico")
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
-        self.setStyleSheet("""
-            QWidget { background-color: #2b2b2b; color: #ffffff; font-family: 'Segoe UI', Arial; }
-            QPushButton { background-color: #3c3f41; border: 1px solid #555; border-radius: 4px; padding: 6px 12px; color: #ccc; }
-            QPushButton:hover { background-color: #4c4f51; color: #fff; }
-            QPushButton:pressed { background-color: #2b2b2b; }
-            QTextEdit { background-color: #222; color: #a9b7c6; border: 1px solid #444; border-radius: 4px; }
-        """)
+
+        # --- 应用外部 QSS 样式 ---
+        qss_content = load_stylesheet(get_resource_path("style.qss"))
+        self.setStyleSheet(qss_content)
 
         self.config = load_config(log_func=self.log)
+        self.load_background_pixmap()
         app_state.download_dir = self.config["download_dir"]
         app_state.task_status_file = self.config["task_status_file"]
         app_state.headers = self.config["headers"]
 
         self.completed_files = 0
         self.total_files = 0
-
         self.card_map = {}
 
         self.init_ui()
@@ -175,24 +164,80 @@ class ImgbbDownloaderApp(QWidget):
         logger.log_signal.connect(self._append_log)
         logger.progress_signal.connect(self._update_progress)
         logger.max_progress_signal.connect(self._set_progress_max)
-
         logger.add_file_signal.connect(self._pre_create_card)
         logger.file_status_signal.connect(self._update_card_status)
         logger.preview_signal.connect(self._fill_card_image)
 
+    def load_background_pixmap(self):
+        """核心修复：优先从 config 读取路径"""
+        bg_path = self.config.get("background_path", "")
+
+        # 情况 A: 用户自定义了背景且文件还在
+        if bg_path and os.path.exists(bg_path):
+            self.bg_pixmap = QPixmap(bg_path)
+            # self.log(f"已加载自定义背景: {os.path.basename(bg_path)}")
+
+        # 情况 B: 没有自定义，或者自定义的文件被删了，尝试读取默认 background.jpg
+        else:
+            default_bg = get_resource_path("background.jpg")
+            if os.path.exists(default_bg):
+                self.bg_pixmap = QPixmap(default_bg)
+            else:
+                self.bg_pixmap = None
+
+        # 强制界面重绘
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        # 启用抗锯齿和高质量缩放，防止图片变糊
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+
+        # 检查背景图是否存在且有效
+        if hasattr(self, 'bg_pixmap') and self.bg_pixmap and not self.bg_pixmap.isNull():
+            win_size = self.size()
+            pix_size = self.bg_pixmap.size()
+
+            # --- 1. 计算缩放比例 (KeepAspectRatioByExpanding) ---
+            # 我们需要图片完全覆盖窗口，所以选择宽高缩放比中较大的那个
+            scale_w = win_size.width() / pix_size.width()
+            scale_h = win_size.height() / pix_size.height()
+            scale = max(scale_w, scale_h)
+
+            # 计算缩放后的实际尺寸
+            draw_w = int(pix_size.width() * scale)
+            draw_h = int(pix_size.height() * scale)
+
+            # --- 2. 计算居中偏移量 (Center) ---
+            # 将缩放后的图片中心与窗口中心对齐
+            # 起始坐标 = (窗口尺寸 - 绘制尺寸) / 2
+            # 结果通常是负数（图片左上角在窗口外面）
+            draw_x = (win_size.width() - draw_w) // 2
+            draw_y = (win_size.height() - draw_h) // 2
+
+            # --- 3. 绘制图片 ---
+            # 使用计算出的坐标和尺寸绘制
+            painter.drawPixmap(draw_x, draw_y, draw_w, draw_h, self.bg_pixmap)
+
+        else:
+            # 如果没有背景图，绘制深色背景
+            painter.fillRect(self.rect(), QColor(30, 30, 30))
+
     def init_ui(self):
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setContentsMargins(25, 25, 25, 25)
         main_layout.setSpacing(15)
 
+        # 设置栏
         settings_frame = QFrame()
-        settings_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
+        settings_frame.setObjectName("GlassBlock")
         settings_layout = QVBoxLayout(settings_frame)
         settings_layout.setContentsMargins(15, 10, 15, 10)
 
         dir_layout = QHBoxLayout()
         self.download_dir_label = QLabel(self.config["download_dir"])
-        self.download_dir_label.setStyleSheet("color:#a9b7c6; font-size: 12px;")
+        self.download_dir_label.setObjectName("PathLabel")
         self.download_dir_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         dir_layout.addWidget(QLabel("📂"), stretch=0)
         dir_layout.addWidget(self.download_dir_label, stretch=1)
@@ -210,16 +255,16 @@ class ImgbbDownloaderApp(QWidget):
         settings_layout.addLayout(dir_layout)
         main_layout.addWidget(settings_frame)
 
+        # 输入与日志
         input_log_layout = QHBoxLayout()
         input_log_layout.setSpacing(15)
 
         input_frame = QFrame()
-        input_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
+        input_frame.setObjectName("GlassBlock")
         input_layout = QVBoxLayout(input_frame)
 
         self.link_input = QTextEdit()
         self.link_input.setPlaceholderText("在此粘贴相册链接或嵌入代码...")
-        self.link_input.setAcceptRichText(False)
         self.link_input.setFixedHeight(120)
         input_layout.addWidget(self.link_input)
 
@@ -231,19 +276,19 @@ class ImgbbDownloaderApp(QWidget):
         input_log_layout.addWidget(input_frame, stretch=1)
 
         log_frame = QFrame()
-        log_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
+        log_frame.setObjectName("GlassBlock")
         log_layout = QVBoxLayout(log_frame)
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
-        self.log_output.setPlaceholderText("操作日志...")
-        self.log_output.setStyleSheet("font-size: 16px; color: #888;")
+        self.log_output.setObjectName("LogOutput")
         log_layout.addWidget(self.log_output)
 
         input_log_layout.addWidget(log_frame, stretch=1)
         main_layout.addLayout(input_log_layout)
 
+        # 图片预览区
         grid_frame = QFrame()
-        grid_frame.setStyleSheet("background-color: #3c3f41; border-radius: 8px;")
+        grid_frame.setObjectName("GlassBlock")
         grid_layout_outer = QVBoxLayout(grid_frame)
         grid_layout_outer.setContentsMargins(10, 10, 10, 10)
 
@@ -254,10 +299,10 @@ class ImgbbDownloaderApp(QWidget):
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setStyleSheet("border: none; background-color: #2b2b2b; border-radius: 4px;")
+        self.scroll_area.setObjectName("PreviewScroll")
 
         self.preview_container = QWidget()
-        self.preview_container.setStyleSheet("background-color: #2b2b2b;")
+        self.preview_container.setObjectName("TransparentWidget")
         self.preview_grid = QGridLayout(self.preview_container)
         self.preview_grid.setSpacing(10)
         self.preview_grid.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
@@ -267,19 +312,16 @@ class ImgbbDownloaderApp(QWidget):
 
         main_layout.addWidget(grid_frame, stretch=3)
 
+        # 进度条
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
-        self.progress_bar.setTextVisible(True)
-        self.progress_bar.setStyleSheet("""
-            QProgressBar { border:1px solid #555555; border-radius:6px; text-align:center; background-color:#222; color:#fff; height: 18px; font-size: 11px;}
-            QProgressBar::chunk { background-color:#4caf50; border-radius:5px; }
-        """)
         main_layout.addWidget(self.progress_bar)
 
+        # 底部按钮
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(10)
         self.start_btn = QPushButton("开始新任务")
-        self.start_btn.setStyleSheet("background-color: #4caf50; color: white; font-weight: bold;")
+        self.start_btn.setObjectName("StartBtn")
         self.start_btn.clicked.connect(self.start_new_task)
         btn_layout.addWidget(self.start_btn)
 
@@ -295,6 +337,15 @@ class ImgbbDownloaderApp(QWidget):
         btn_layout.addWidget(self.pause_btn)
         main_layout.addLayout(btn_layout)
 
+        # --- 创建浮动齿轮按钮 ---
+        self.bg_settings_btn = QPushButton("⚙️")
+        self.bg_settings_btn.setObjectName("SettingsIconBtn")
+        self.bg_settings_btn.setFixedSize(40, 40)
+
+        self.bg_settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.bg_settings_btn.clicked.connect(self.show_bg_menu)
+        btn_layout.addWidget(self.bg_settings_btn)
+
     def log(self, msg: str): logger.log_signal.emit(msg)
 
     def _append_log(self, msg: str):
@@ -306,45 +357,38 @@ class ImgbbDownloaderApp(QWidget):
 
     def _pre_create_card(self, file_name):
         if file_name in self.card_map: return
-
         card = ImageStatusCard(file_name)
         count = len(self.card_map)
         row = count // 5
         col = count % 5
         self.preview_grid.addWidget(card, row, col)
-
         self.card_map[file_name] = card
 
     def _update_card_status(self, file_name, status_text):
         card = self.card_map.get(file_name)
         if not card: return
-
         if status_text == "下载中":
-            card.set_status("⏳ 下载中...", "#ff9800")
+            card.set_status("⏳ 下载中...", "#ffeb3b")
         elif status_text == "失败":
-            card.set_status("❌ 失败", "#f44336")
+            card.set_status("❌ 失败", "#ff5252")
         elif status_text == "待下载":
-            card.set_status("待下载", "#777")
+            card.set_status("待下载")
 
     def _fill_card_image(self, full_file_path):
         file_name = os.path.basename(full_file_path)
         card = self.card_map.get(file_name)
         if not card: return
-
         card.set_image(full_file_path)
 
     def update_progress_signal(self, file_index, total_files, file_name, status):
         if status != "已完成":
             logger.file_status_signal.emit(file_name, status)
-
         if status in ["已完成", "失败"]:
             self.completed_files += 1
             logger.progress_signal.emit(self.completed_files)
-
             if status == "已完成":
                 full_path = os.path.join(app_state.download_dir, file_name)
                 logger.preview_signal.emit(full_path)
-
 
     def _clear_grid(self):
         self.card_map.clear()
@@ -360,30 +404,22 @@ class ImgbbDownloaderApp(QWidget):
         if not links:
             QMessageBox.warning(self, "提示", "没有检测到任何有效链接")
             return
-
         task_status.clear_json()
         self.log(f"✔ 检测到 {len(links)} 个链接，正在解析...")
-
         self._clear_grid()
-
         def worker():
             try:
                 password = self.password_input.toPlainText().strip() or None
-                
                 if get_download_links.process_download_links_until_success(
-                    links, album_password=password, log_func=self.log
-                ) is False: return 
-
+                        links, album_password=password, log_func=self.log
+                ) is False: return
                 url_map = task_status.get_failed_map(log_func=self.log)
                 self.total_files = len(url_map)
                 self.completed_files = 0
                 logger.max_progress_signal.emit(self.total_files)
-
                 for file_name in url_map.values():
                     logger.add_file_signal.emit(file_name)
-
                 self.log(f"✔ 成功获取 {self.total_files} 张原图链接，准备下载...")
-
                 download.download_files_concurrently(
                     url_map,
                     log_func=self.log,
@@ -392,28 +428,22 @@ class ImgbbDownloaderApp(QWidget):
                 self.log("🎉 所有下载任务已处理完成！")
             except Exception as e:
                 self.log(f"❗ 发生全局错误：{e}")
-
         threading.Thread(target=worker, daemon=True).start()
 
     def resume_last_task(self):
         from app_state import task_status_file
         import download, task_status
-
         if not os.path.exists(task_status_file) or os.path.getsize(task_status_file) == 0:
             QMessageBox.information(self, "提示", "未找到上次下载任务的状态文件")
             return
-
         self._clear_grid()
         self.log("🔁 恢复上次未完成的下载任务...")
-
         url_map = task_status.get_failed_map(log_func=self.log)
         self.total_files = len(url_map)
         self.completed_files = 0
         logger.max_progress_signal.emit(self.total_files)
-
         for file_name in url_map.values():
             logger.add_file_signal.emit(file_name)
-
         def worker():
             try:
                 download.download_files_concurrently(
@@ -424,7 +454,6 @@ class ImgbbDownloaderApp(QWidget):
                 self.log("🎉 恢复的任务已处理完成！")
             except Exception as e:
                 self.log(f"❗ 发生错误：{e}")
-
         threading.Thread(target=worker, daemon=True).start()
 
     def extract_links(self):
@@ -444,13 +473,17 @@ class ImgbbDownloaderApp(QWidget):
         if pause_event.is_set():
             pause_event.clear()
             self.pause_btn.setText("继续")
-            self.pause_btn.setStyleSheet("background-color: #ff9800; color: white;")
+            self.pause_btn.setObjectName("PauseBtnActive")
             self.log("⏸️ 下载已暂停")
         else:
             pause_event.set()
             self.pause_btn.setText("暂停")
-            self.pause_btn.setStyleSheet("")
+            self.pause_btn.setObjectName("")
             self.log("▶️ 下载已继续")
+
+        # 强制更新 QSS
+        self.pause_btn.style().unpolish(self.pause_btn)
+        self.pause_btn.style().polish(self.pause_btn)
 
     def choose_download_dir(self):
         from config import write_config
@@ -478,6 +511,53 @@ class ImgbbDownloaderApp(QWidget):
         task_status.reset_all_to_pending(log_func=self.log)
         self.download_dir_label.setText(default_dir)
         self.log("🔄 下载目录已恢复默认")
+
+    def show_bg_menu(self):
+        """显示背景设置菜单"""
+        menu = QMenu(self)
+        change_action = QAction("🖼️ 更换背景图片", self)
+        reset_action = QAction("🔄 恢复默认背景", self)
+
+        change_action.triggered.connect(self.change_background)
+        reset_action.triggered.connect(self.reset_background)
+
+        menu.addAction(change_action)
+        menu.addAction(reset_action)
+        menu.exec(self.bg_settings_btn.mapToGlobal(self.bg_settings_btn.rect().bottomLeft()))
+
+    def change_background(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "选择背景图片", "", "Images (*.png *.jpg *.jpeg *.bmp)")
+        if file_path:
+            self.config["background_path"] = file_path
+            write_config(self.config)
+            self.load_background_pixmap()
+            self.update() # 触发重绘
+            self.log(f"✅ 背景已更换为: {os.path.basename(file_path)}")
+
+    def reset_background(self):
+        self.config["background_path"] = ""
+        write_config(self.config)
+        self.load_background_pixmap()
+        self.update()
+        self.log("🔄 已恢复默认背景")
+
+    def resizeEvent(self, event):
+        """窗口大小改变时，重新计算背景和齿轮位置"""
+        super().resizeEvent(event)
+
+        # 1. 如果你使用了背景缓存，记得更新它
+        if hasattr(self, 'update_background_cache'):
+            self.update_background_cache()
+
+        # 2. 计算齿轮位置：右边距 20px，下边距 20px
+        margin = 20
+        btn_w = self.bg_settings_btn.width()
+        btn_h = self.bg_settings_btn.height()
+
+        new_x = self.width() - btn_w - margin
+        new_y = self.height() - btn_h - margin
+
+        self.bg_settings_btn.move(new_x, new_y)
 
 if __name__ == "__main__":
     try:

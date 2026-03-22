@@ -1,0 +1,151 @@
+/* 全局基础设置 */
+QWidget {
+    color: #ffffff;
+    font-family: 'Segoe UI', 'Microsoft YaHei';
+}
+
+/* 按钮通用样式 */
+QPushButton { 
+    background-color: rgba(255, 255, 255, 35); 
+    border: 1px solid rgba(255, 255, 255, 50); 
+    border-radius: 6px; 
+    padding: 6px 12px; 
+    color: #fff; 
+}
+
+QPushButton:hover { 
+    background-color: rgba(255, 255, 255, 60); 
+    border: 1px solid rgba(255, 255, 255, 100); 
+}
+
+QPushButton:pressed { 
+    background-color: rgba(0, 0, 0, 50); 
+}
+
+/* 输入框样式 */
+QTextEdit { 
+    background-color: rgba(0, 0, 0, 80); 
+    color: #eee; 
+    border: 1px solid rgba(255, 255, 255, 30); 
+    border-radius: 8px; 
+}
+
+QLabel { 
+    background: transparent; 
+    border: none; 
+}
+
+/* 特殊样式类 (通过 setProperty 或 objectName 调用) */
+#GlassBlock {
+    background-color: rgba(255, 255, 255, 20); 
+    border: 1px solid rgba(255, 255, 255, 30); 
+    border-radius: 12px;
+}
+
+#LogOutput {
+    font-size: 14px; 
+    color: #8AB4F8; 
+    background-color: rgba(0,0,0,100); 
+    border: none;
+}
+
+#StartBtn {
+    background-color: rgba(76, 175, 80, 180); 
+    color: white; 
+    font-weight: bold; 
+    border: none;
+}
+
+#PauseBtnActive {
+    background-color: #ff9800; 
+    color: white; 
+    border: none;
+}
+
+/* 进度条样式 */
+QProgressBar { 
+    border: none; 
+    border-radius: 6px; 
+    text-align: center; 
+    background-color: rgba(0, 0, 0, 120); 
+    color: #fff; 
+    height: 12px; 
+    font-size: 10px;
+}
+
+QProgressBar::chunk { 
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4caf50, stop:1 #81c784); 
+    border-radius: 6px; 
+}
+
+/* 图片卡片样式 */
+ImageStatusCard {
+    background-color: rgba(255, 255, 255, 20);
+    border: 1px solid rgba(255, 255, 255, 30);
+    border-radius: 12px;
+}
+
+ImageStatusCard:hover {
+    background-color: rgba(255, 255, 255, 40);
+    border: 1px solid rgba(255, 255, 255, 80);
+}
+
+ImageStatusCard[completed="true"] {
+    background-color: rgba(76, 175, 80, 40);
+    border: 1px solid rgba(76, 175, 80, 150);
+}
+
+/* 确保滚动区域整体透明 */
+#PreviewScroll {
+    border: none;
+    background-color: transparent;
+    background: transparent;
+}
+
+/* 关键：必须设置 viewport（视口）也为透明 */
+#PreviewScroll QWidget > QWidget {
+    background: transparent;
+}
+
+/* 确保存放卡片的容器透明 */
+#TransparentWidget {
+    background-color: transparent;
+    background: transparent;
+}
+
+/* 调整滚动条样式（可选，让它更好看） */
+QScrollBar:vertical {
+    background: rgba(0, 0, 0, 30);
+    width: 8px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(255, 255, 255, 50);
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+/* 齿轮设置按钮 */
+#SettingsIconBtn {
+    background: rgba(0, 0, 0, 120);
+    border: 1px solid rgba(255, 255, 255, 30);
+    border-radius: 15px; /* 圆形 */
+    padding: 4px;
+    font-size: 2em
+}
+
+#SettingsIconBtn:hover {
+    background: rgba(255, 255, 255, 60);
+    border: 1px solid rgba(255, 255, 255, 80);
+}
+
+/* 确保预览视口透明 (修复之前的黑色问题) */
+#PreviewScroll, #PreviewScroll > QWidget, #PreviewScroll QWidget > QWidget {
+    background: transparent !important;
+    border: none;
+}

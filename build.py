@@ -5,7 +5,7 @@ import sys
 MAIN_SCRIPT = "gui.py"
 APP_NAME = "ImgbbDownloader"
 ICON_PATH = "icon.ico"
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 COMPANY = "LucKShark"
 DESCRIPTION = "Imgbb 下载器"
 
@@ -19,6 +19,8 @@ cmd = [
     "--enable-plugin=pyqt6",
 
     f"--include-data-files={os.path.abspath(ICON_PATH)}={ICON_PATH}",
+    f"--include-data-files={os.path.abspath('background.jpg')}=background.jpg",
+    f"--include-data-files={os.path.abspath('style.qss')}=style.qss",
     f"--windows-icon-from-ico={ICON_PATH}",
 
     f"--output-filename={APP_NAME}",
